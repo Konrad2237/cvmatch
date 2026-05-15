@@ -1,32 +1,52 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-const LS_CV   = 'cvmatch_cv_text';
+const LS_CV    = 'cvmatch_cv_text';
 const LS_EXTRA = 'cvmatch_extra_skills';
 
 // Props:
 //   onSubmit(formData: FormData) — called when user submits
 //   disabled: boolean            — true while analysis is running
 export default function AnalyzeForm({ onSubmit, disabled }) {
-  const [cvMode, setCvMode]       = useState('text'); // 'text' | 'file'
-  const [cvText, setCvText]       = useState('');
-  const [cvFile, setCvFile]       = useState(null);
-  const [extraSkills, setExtra]   = useState('');
+  const [cvMode, setCvMode]     = useState('text'); // 'text' | 'file'
+  const [cvText, setCvText]     = useState('');
+  const [cvFile, setCvFile]     = useState(null);
+  const [skills, setSkills]     = useState([]);   // saved chips
+  const [skillInput, setSkillInput] = useState(''); // current input value
   const [jobPosting, setJobPosting] = useState('');
-  const [saved, setSaved]         = useState(false);
+  const [saved, setSaved]       = useState(false);
+  const inputRef = useRef(null);
 
   // Load saved profile on first render
   useEffect(() => {
-    const savedCv    = localStorage.getItem(LS_CV)    || '';
-    const savedExtra = localStorage.getItem(LS_EXTRA) || '';
-    if (savedCv)    setCvText(savedCv);
-    if (savedExtra) setExtra(savedExtra);
+    const savedCv     = localStorage.getItem(LS_CV) || '';
+    const savedSkills = localStorage.getItem(LS_EXTRA);
+    if (savedCv) setCvText(savedCv);
+    if (savedSkills) {
+      try { setSkills(JSON.parse(savedSkills)); } catch {}
+    }
   }, []);
+
+  function addSkill() {
+    const val = skillInput.trim();
+    if (!val || skills.includes(val)) return;
+    setSkills(prev => [...prev, val]);
+    setSkillInput('');
+    inputRef.current?.focus();
+  }
+
+  function removeSkill(skill) {
+    setSkills(prev => prev.filter(s => s !== skill));
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') { e.preventDefault(); addSkill(); }
+  }
 
   function handleSave() {
     localStorage.setItem(LS_CV,    cvText);
-    localStorage.setItem(LS_EXTRA, extraSkills);
+    localStorage.setItem(LS_EXTRA, JSON.stringify(skills));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -39,9 +59,8 @@ export default function AnalyzeForm({ onSubmit, disabled }) {
     if (cvMode === 'file' && cvFile) {
       formData.append('cvFile', cvFile);
     } else {
-      // Append extra skills so Claude sees full context
-      const fullCv = extraSkills.trim()
-        ? `${cvText}\n\n---\nDodatkowe umiejętności i kontekst (poza formalnym CV):\n${extraSkills}`
+      const fullCv = skills.length > 0
+        ? `${cvText}\n\n---\nDodatkowe umiejętności i kontekst (poza formalnym CV):\n${skills.map(s => `- ${s}`).join('\n')}`
         : cvText;
       formData.append('cvText', fullCv);
     }
@@ -96,7 +115,7 @@ export default function AnalyzeForm({ onSubmit, disabled }) {
         )}
       </div>
 
-      {/* Extra skills — only relevant in text mode */}
+      {/* Extra skills chip input — text mode only */}
       {cvMode === 'text' && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -105,14 +124,50 @@ export default function AnalyzeForm({ onSubmit, disabled }) {
           <p className="text-xs text-gray-400 mb-2">
             Narzędzia i umiejętności których nie ma w CV — Claude doliczy je do analizy.
           </p>
-          <textarea
-            value={extraSkills}
-            onChange={(e) => setExtra(e.target.value)}
-            placeholder="np. Midjourney, Make.com, Claude Code, n8n, Notion..."
-            rows={3}
-            disabled={disabled}
-            className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
-          />
+
+          {/* Chips */}
+          {skills.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {skills.map(skill => (
+                <span
+                  key={skill}
+                  className="inline-flex items-center gap-1 text-sm bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-full"
+                >
+                  {skill}
+                  <button
+                    type="button"
+                    onClick={() => removeSkill(skill)}
+                    disabled={disabled}
+                    className="text-blue-400 hover:text-blue-700 leading-none disabled:opacity-50"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Input + Add button */}
+          <div className="flex gap-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={skillInput}
+              onChange={(e) => setSkillInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Wpisz umiejętność i naciśnij Enter lub Dodaj..."
+              disabled={disabled}
+              className="flex-1 border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+            />
+            <button
+              type="button"
+              onClick={addSkill}
+              disabled={disabled || !skillInput.trim()}
+              className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+            >
+              Dodaj
+            </button>
+          </div>
         </div>
       )}
 
