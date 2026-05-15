@@ -6,6 +6,7 @@ import ProfileTab from './components/ProfileTab';
 import MatchScore from './components/MatchScore';
 import GapAnalysis from './components/GapAnalysis';
 import BulletPoints from './components/BulletPoints';
+import LearningRoadmap from './components/LearningRoadmap';
 import StreamingStatus from './components/StreamingStatus';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -18,6 +19,7 @@ export default function Home() {
     matchScore: null,
     gaps: null,
     bullets: null,
+    roadmap: null,
   });
 
   // Ref lets us abort the fetch if user navigates away mid-stream
@@ -31,7 +33,7 @@ export default function Home() {
 
     setStatus('loading');
     setErrorMessage('');
-    setResults({ matchScore: null, gaps: null, bullets: null });
+    setResults({ matchScore: null, gaps: null, bullets: null, roadmap: null });
 
     let response;
     try {
@@ -91,6 +93,9 @@ export default function Home() {
             case 'bullets':
               setResults(r => ({ ...r, bullets: event.payload }));
               break;
+            case 'roadmap':
+              setResults(r => ({ ...r, roadmap: event.payload }));
+              break;
             case 'done':
               setStatus('done');
               break;
@@ -144,6 +149,7 @@ export default function Home() {
             {results.matchScore && <MatchScore score={results.matchScore} />}
             {results.gaps && <GapAnalysis gaps={results.gaps} />}
             {results.bullets && <BulletPoints bullets={results.bullets} />}
+            {results.roadmap && <LearningRoadmap roadmap={results.roadmap} />}
 
             {status === 'error' && (
               <p className="mt-6 text-sm text-red-600">

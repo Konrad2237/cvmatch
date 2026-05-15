@@ -102,8 +102,13 @@ describe('POST /analyze — happy path', () => {
         requiredBreakdown: [{ skill: 'React', score: 2 }, { skill: 'Docker', score: 0 }],
         optionalBreakdown: [{ skill: 'TypeScript', score: 1 }, { skill: 'CI/CD', score: 0 }],
       });
-      onEvent('gaps', VALID_GAPS);
+      onEvent('gaps',    VALID_GAPS);
       onEvent('bullets', VALID_BULLETS);
+      onEvent('roadmap', [
+        { skill: 'Docker', dlaczego: 'Wymagane w tej ofercie, brak w CV.', start: 'Docker getting started — 2h.' },
+        { skill: 'CI/CD',  dlaczego: 'Pipeline automatyczny to standard.', start: 'GitHub Actions quickstart.' },
+        { skill: 'AWS',    dlaczego: 'Cloud obecny w większości ofert.',   start: 'AWS Free Tier + EC2 tutorial.' },
+      ]);
       onEvent('done', null);
     });
   });

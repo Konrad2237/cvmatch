@@ -29,6 +29,12 @@ const VALID_OPTIONAL_BREAKDOWN = [
   { skill: 'GraphQL', score: 1 },
 ];
 
+const VALID_ROADMAP = Array(3).fill({
+  skill:    'Docker',
+  dlaczego: 'Konteneryzacja pojawia się w większości ofert backend — 0/2 pkt na tej i podobnych ofertach.',
+  start:    'Przejdź oficjalny Docker getting started i skonteneryzuj jeden istniejący projekt w 2h.',
+});
+
 function validAnalysis({ matchScore: matchScoreOverride = {}, ...rest } = {}) {
   return {
     matchScore: {
@@ -40,8 +46,9 @@ function validAnalysis({ matchScore: matchScoreOverride = {}, ...rest } = {}) {
       optionalBreakdown: VALID_OPTIONAL_BREAKDOWN,
       ...matchScoreOverride,
     },
-    gaps: Array(5).fill(VALID_GAP),
+    gaps:    Array(5).fill(VALID_GAP),
     bullets: Array(3).fill(VALID_BULLET),
+    roadmap: VALID_ROADMAP,
     ...rest,
   };
 }

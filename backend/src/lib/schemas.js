@@ -17,6 +17,12 @@ const skillScoreSchema = z.object({
   score: z.number().min(0).max(2),
 });
 
+const roadmapItemSchema = z.object({
+  skill:    z.string(),
+  dlaczego: z.string(), // why this skill, why now — impact on employability
+  start:    z.string(), // concrete first step, not generic advice
+});
+
 const analysisSchema = z.object({
   matchScore: z.object({
     requiredScore: z.number().min(0),
@@ -26,8 +32,9 @@ const analysisSchema = z.object({
     requiredBreakdown: z.array(skillScoreSchema),
     optionalBreakdown: z.array(skillScoreSchema),
   }),
-  gaps: z.array(gapSchema).min(5),
+  gaps:    z.array(gapSchema).min(5),
   bullets: z.array(bulletSchema).min(3).max(5),
+  roadmap: z.array(roadmapItemSchema).min(3).max(5),
 });
 
-module.exports = { analysisSchema, gapSchema, bulletSchema };
+module.exports = { analysisSchema, gapSchema, bulletSchema, roadmapItemSchema };

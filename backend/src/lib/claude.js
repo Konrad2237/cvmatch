@@ -75,6 +75,16 @@ DOBRY przykład przepisania (konkretny, używa słów kluczowych z ogłoszenia):
 DOBRY przykład przepisania (wyciąga konkret z ogólnego):
 {"original":"Współpracowałem z zespołem przy projektach","rewritten":"Współpracowałem w 4-osobowym zespole w trybie zdalnym używając Jira i Git — odpowiada wymaganiu 'praca w zespole rozproszonym' z sekcji Środowisko pracy"}
 
+ZADANIE 4 — roadmap (3-5 pozycji):
+Ułóż priorytetową listę umiejętności do nauki na podstawie gaps i profilu kandydata.
+Kolejność: maksymalizuj ROI — priorytetyzuj [Wymagane] przed [Mile widziane], umiejętności z wysokim impaktem na wynik (0/2 w wymaganych) przed niskim (0.5/2), łatwe do nauki przy istniejącym tle kandydata przed trudnymi.
+Jeśli kandydat ma bliski odpowiednik (np. pgvector gdy wymagany Pinecone) — zaznacz że nauka zajmie dni nie tygodnie.
+
+Każda pozycja:
+- skill: konkretna nazwa
+- dlaczego: 1-2 zdania — dlaczego TA umiejętność i TERAZ, jaki ma wpływ na zatrudnialność w tej roli i podobnych
+- start: jeden konkretny pierwszy krok (nie "naucz się Dockera" lecz "przejdź oficjalny Docker getting started i skonteneryzuj jeden istniejący projekt w 2h")
+
 Format odpowiedzi (TYLKO ten JSON, zero tekstu przed ani po):
 {
   "matchScore": {
@@ -96,6 +106,13 @@ Format odpowiedzi (TYLKO ten JSON, zero tekstu przed ani po):
     {
       "original": "<dosłowny cytat z CV lub null jeśli nowe>",
       "rewritten": "<przepisana wersja z uzasadnieniem dlaczego pasuje do ogłoszenia>"
+    }
+  ],
+  "roadmap": [
+    {
+      "skill": "<nazwa umiejętności>",
+      "dlaczego": "<dlaczego ta umiejętność i teraz — wpływ na zatrudnialność>",
+      "start": "<konkretny pierwszy krok>"
     }
   ]
 }`;
@@ -173,10 +190,11 @@ async function analyzeCV({ cvText, cvFile, mimetype, jobPosting, onEvent }) {
     const result = analysisSchema.parse(parsed);
 
     // Emit results as separate events so frontend can render progressively
-    onEvent('score', result.matchScore);
-    onEvent('gaps', result.gaps);
-    onEvent('bullets', result.bullets);
-    onEvent('done', null);
+    onEvent('score',    result.matchScore);
+    onEvent('gaps',     result.gaps);
+    onEvent('bullets',  result.bullets);
+    onEvent('roadmap',  result.roadmap);
+    onEvent('done',     null);
   } catch (err) {
     const message = err.name === 'ZodError'
       ? `Nieprawidłowa struktura odpowiedzi Claude: ${err.errors[0]?.message}`
