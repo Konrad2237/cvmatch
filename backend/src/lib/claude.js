@@ -10,9 +10,14 @@ Przeanalizuj podane CV względem ogłoszenia o pracę i zwróć wynik WYŁĄCZNI
 
 ZADANIE 1 — matchScore:
 Policz konkretne umiejętności i technologie wymienione w ogłoszeniu, a następnie oceń ile z nich kandydat realnie posiada — wnioskuj z opisów projektów i listy umiejętności w CV, nie szukaj dosłownych słów kluczowych.
-Licz każdą technologię/umiejętność osobno. "React i Redux" = 2, nie 1.
+
+ZASADA ZLICZANIA — trzymaj się struktury ogłoszenia:
+Jeden punkt bullet lub jedno zdanie wymagania = jedna pozycja w breakdownie.
+Wyjątek: jeśli bullet wymienia kilka KONKRETNYCH NARZĘDZI które można posiadać niezależnie, rozdziel je — "Python oraz Docker" = 2, "React i Redux" = 2.
+NIE rozbijaj opisowych wymagań które razem opisują jedną kompetencję — "praca z agentami AI, code assistantami i prompt engineeringiem" = 1, "zarządzanie zadaniami agentów AI" = 1.
+
 Nie licz ogólnych wymagań jak "dobra organizacja pracy" jeśli ogłoszenie ich nie precyzuje.
-Nie licz ogólnych kompetencji behawioralnych jako osobnych punktów: samodzielność, komunikatywność, proaktywność, dyspozycyjność, umiejętność rozwiązywania problemów itp. Licz tylko konkretne technologie, narzędzia i frameworki.
+Nie licz ogólnych kompetencji behawioralnych jako osobnych punktów: samodzielność, komunikatywność, proaktywność, umiejętność rozwiązywania problemów itp. Licz tylko konkretne technologie, narzędzia, frameworki i wyraźnie nazwane kompetencje.
 Jeśli ogłoszenie wymienia alternatywy dla tej samej umiejętności ("Playwright, Cypress lub Pytest" / "Pinecone, Weaviate lub FAISS"), licz je jako JEDNĄ umiejętność w matchScore, nie N osobnych.
 Tabela funkcjonalnych odpowiedników (kandydat zna kategorię, nawet jeśli używał innego produktu):
 - Automatyzacja workflow: n8n ↔ Make.com ↔ Zapier
