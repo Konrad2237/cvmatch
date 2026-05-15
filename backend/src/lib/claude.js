@@ -12,21 +12,35 @@ ZADANIE 1 — matchScore:
 Policz konkretne umiejętności i technologie wymienione w ogłoszeniu, a następnie sprawdź ile z nich jest w CV.
 Licz każdą technologię/umiejętność osobno. "React i Redux" = 2, nie 1.
 Nie licz ogólnych wymagań jak "dobra organizacja pracy" jeśli ogłoszenie ich nie precyzuje.
+Nie licz ogólnych kompetencji behawioralnych jako osobnych punktów: samodzielność, komunikatywność, proaktywność, dyspozycyjność, umiejętność rozwiązywania problemów itp. Licz tylko konkretne technologie, narzędzia i frameworki.
+Jeśli ogłoszenie wymienia alternatywy dla tej samej umiejętności ("Playwright, Cypress lub Pytest" / "Pinecone, Weaviate lub FAISS"), licz je jako JEDNĄ umiejętność w matchScore, nie N osobnych.
+Traktuj narzędzia funkcjonalnie równoważne jako matched w score — kandydat zna tę kategorię narzędzi, nawet jeśli używał innego produktu:
+- Automatyzacja workflow: n8n ↔ Make.com ↔ Zapier
+- Vector DB: pgvector ↔ Pinecone ↔ Weaviate ↔ FAISS ↔ Qdrant
+- LLM frameworki: LangGraph ↔ LangChain ↔ LlamaIndex
+- LLM API: Claude API ↔ OpenAI API ↔ Gemini API
+- PaaS hosting: Railway ↔ Render ↔ Fly.io ↔ Heroku
+- Relacyjne bazy: PostgreSQL ↔ MySQL ↔ MSSQL
+Zasada: jeśli wymaganie OPCJONALNE i kandydat ma odpowiednik → licz jako matched, nie dodawaj gap.
+Zasada: jeśli wymaganie OBOWIĄZKOWE i kandydat ma odpowiednik → licz jako matched, ale dodaj gap z [Wymagane] i krótką oceną różnicy.
 
 ZADANIE 2 — gaps (minimum 5):
 Wypisz czego brakuje w CV względem ogłoszenia. Każdy brak musi mieć:
-- skill: konkretna nazwa (np. "Docker", nie "konteneryzacja")
+- skill: konkretna nazwa (np. "Docker", nie "konteneryzacja"); jeśli ogłoszenie wymienia alternatywy — zapisz jako grupę: "Playwright/Cypress/Pytest"
 - category: dokładnie jedna z: "Technologia" | "Soft skill" | "Certyfikat"
-- detail: zdanie które mówi WHERE w ogłoszeniu i WHY to brakuje
+- detail: zacznij od [Wymagane] lub [Mile widziane] zależnie od sekcji ogłoszenia, następnie WHERE w ogłoszeniu i WHY to brakuje. Jeśli kandydat ma pokrewną technologię z tego samego ekosystemu (np. LangGraph zamiast LangChain, pgvector zamiast Pinecone, Claude API zamiast Gemini API), zaznacz to i krótko oceń czy umiejętność jest transferowalna.
 
 NIEDOZWOLONY przykład braku (zbyt ogólny):
 {"skill":"umiejętności techniczne","category":"Technologia","detail":"brakuje doświadczenia technicznego"}
 
-DOBRY przykład braku:
-{"skill":"Docker","category":"Technologia","detail":"Ogłoszenie wymaga konteneryzacji mikroserwisów (sekcja Wymagania, pkt 4) — CV nie zawiera Docker ani żadnego narzędzia do konteneryzacji"}
+DOBRY przykład braku (wymagane, brak kompletny):
+{"skill":"Docker","category":"Technologia","detail":"[Wymagane] Ogłoszenie wymaga konteneryzacji mikroserwisów (sekcja Wymagania, pkt 4) — CV nie zawiera Docker ani żadnego narzędzia do konteneryzacji"}
 
-DOBRY przykład braku:
-{"skill":"praca w metodologii Agile/Scrum","category":"Soft skill","detail":"Ogłoszenie wymaga doświadczenia w Scrum (sekcja Środowisko pracy) — CV opisuje projekty bez wzmianki o metodologii"}
+DOBRY przykład braku (wymagane, pokrewna technologia):
+{"skill":"LangChain","category":"Technologia","detail":"[Wymagane] Ogłoszenie wymaga LangChain (sekcja Stack Techniczny) — CV zawiera LangGraph, który jest częścią ekosystemu LangChain; transferowalność wysoka, ale LangChain core nie jest wymieniony wprost"}
+
+DOBRY przykład braku (mile widziane):
+{"skill":"praca w metodologii Agile/Scrum","category":"Soft skill","detail":"[Mile widziane] Ogłoszenie wymaga doświadczenia w Scrum (sekcja Środowisko pracy) — CV opisuje projekty bez wzmianki o metodologii"}
 
 ZADANIE 3 — bullets (3-5 sztuk):
 Przepisz istniejące fragmenty CV tak, żeby lepiej odpowiadały temu ogłoszeniu.
@@ -149,4 +163,4 @@ async function analyzeCV({ cvText, cvFile, mimetype, jobPosting, onEvent }) {
   }
 }
 
-module.exports = { analyzeCV };
+module.exports = { analyzeCV, extractJSON };

@@ -27,6 +27,10 @@ docs/
 
 # Logs and test files
 logi.txt
+testy.txt
+
+# Personal test data (CV files)
+testycv/
 
 # Claude Code
 .claude/

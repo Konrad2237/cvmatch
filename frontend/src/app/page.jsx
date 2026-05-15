@@ -93,7 +93,7 @@ export default function Home() {
               setStatus('done');
               break;
             case 'error':
-              setErrorMessage(event.message || 'Błąd analizy. Spróbuj ponownie.');
+              setErrorMessage(event.payload?.message || 'Błąd analizy. Spróbuj ponownie.');
               setStatus('error');
               break;
           }
