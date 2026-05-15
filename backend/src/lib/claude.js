@@ -34,7 +34,7 @@ Punktuj każdą opcjonalną umiejętność (sekcja "Mile widziane" lub podobna) 
 - 0 pkt: brak
 
 Zwróć w matchScore:
-- requiredScore: suma punktów za wymagane (może być ułamkowa, np. 8.5)
+- requiredScore: suma punktów za wymagane (może być ułamkowa — używaj kropki jako separatora: 8.5 nie 8,5)
 - requiredTotal: liczba wymaganych umiejętności
 - optionalMatched: liczba opcjonalnych które kandydat posiada
 - optionalTotal: liczba opcjonalnych umiejętności w ogłoszeniu (0 jeśli brak sekcji)
@@ -76,7 +76,7 @@ DOBRY przykład przepisania (wyciąga konkret z ogólnego):
 Format odpowiedzi (TYLKO ten JSON, zero tekstu przed ani po):
 {
   "matchScore": {
-    "requiredScore": <suma punktów za wymagane, może być ułamkowa np. 8.5>,
+    "requiredScore": <suma punktów za wymagane — liczba z kropką jako separatorem dziesiętnym np. 8.5>,
     "requiredTotal": <liczba wymaganych umiejętności, liczba całkowita>,
     "optionalMatched": <liczba opcjonalnych które kandydat posiada, liczba całkowita>,
     "optionalTotal": <liczba opcjonalnych umiejętności w ogłoszeniu, liczba całkowita>
