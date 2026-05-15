@@ -71,10 +71,10 @@ NIEDOZWOLONY przykład przepisania (generyczny, nie zmienia nic):
 {"original":"Pracowałem z React","rewritten":"Posiadam doświadczenie w React stosowanym w projektach webowych"}
 
 DOBRY przykład przepisania (konkretny, używa słów kluczowych z ogłoszenia):
-{"original":"Pracowałem z React i budowałem interfejsy","rewritten":"Budowałem responsywne interfejsy w React 18 z TypeScript, wdrożone w środowisku produkcyjnym dla 3 klientów B2B — bezpośrednio odpowiada wymaganiu 'doświadczenie z React w środowisku produkcyjnym' z ogłoszenia"}
+{"original":"Pracowałem z React i budowałem interfejsy","rewritten":"Budowałem responsywne interfejsy w React 18 z TypeScript, wdrożone w środowisku produkcyjnym dla 3 klientów B2B"}
 
 DOBRY przykład przepisania (wyciąga konkret z ogólnego):
-{"original":"Współpracowałem z zespołem przy projektach","rewritten":"Współpracowałem w 4-osobowym zespole w trybie zdalnym używając Jira i Git — odpowiada wymaganiu 'praca w zespole rozproszonym' z sekcji Środowisko pracy"}
+{"original":"Współpracowałem z zespołem przy projektach","rewritten":"Współpracowałem w 4-osobowym zespole w trybie zdalnym używając Jira i Git"}
 
 Format odpowiedzi (TYLKO ten JSON, zero tekstu przed ani po):
 {
