@@ -38,6 +38,8 @@ Zwróć w matchScore:
 - requiredTotal: liczba wymaganych umiejętności
 - optionalMatched: liczba opcjonalnych które kandydat posiada
 - optionalTotal: liczba opcjonalnych umiejętności w ogłoszeniu (0 jeśli brak sekcji)
+- requiredBreakdown: lista każdej wymaganej umiejętności z przyznanym score — {"skill": "...", "score": 0|0.5|1|1.5|2}; kolejność jak w ogłoszeniu
+- optionalBreakdown: lista każdej opcjonalnej umiejętności z przyznanym score — {"skill": "...", "score": 0|1}; puste gdy optionalTotal === 0
 
 Zasada: jeśli wymaganie OPCJONALNE i kandydat ma odpowiednik → optionalMatched += 1, nie dodawaj gap.
 Zasada: jeśli wymaganie OBOWIĄZKOWE i kandydat ma odpowiednik → requiredScore += 1, dodaj gap z [Wymagane] i krótką oceną różnicy.
@@ -79,7 +81,9 @@ Format odpowiedzi (TYLKO ten JSON, zero tekstu przed ani po):
     "requiredScore": <suma punktów za wymagane — liczba z kropką jako separatorem dziesiętnym np. 8.5>,
     "requiredTotal": <liczba wymaganych umiejętności, liczba całkowita>,
     "optionalMatched": <liczba opcjonalnych które kandydat posiada, liczba całkowita>,
-    "optionalTotal": <liczba opcjonalnych umiejętności w ogłoszeniu, liczba całkowita>
+    "optionalTotal": <liczba opcjonalnych umiejętności w ogłoszeniu, liczba całkowita>,
+    "requiredBreakdown": [{"skill": "<nazwa>", "score": <0|0.5|1|1.5|2>}],
+    "optionalBreakdown": [{"skill": "<nazwa>", "score": <0|1>}]
   },
   "gaps": [
     {

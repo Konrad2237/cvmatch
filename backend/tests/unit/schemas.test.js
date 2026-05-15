@@ -13,12 +13,36 @@ const VALID_BULLET = {
   rewritten: 'Budowałem interfejsy w React 18 — odpowiada wymaganiu z ogłoszenia',
 };
 
-function validAnalysis(overrides = {}) {
+const VALID_REQUIRED_BREAKDOWN = [
+  { skill: 'React', score: 2 },
+  { skill: 'Node.js', score: 2 },
+  { skill: 'Docker', score: 0 },
+  { skill: 'TypeScript', score: 1 },
+  { skill: 'Git', score: 2 },
+  { skill: 'Python', score: 1 },
+];
+
+const VALID_OPTIONAL_BREAKDOWN = [
+  { skill: 'CI/CD', score: 0 },
+  { skill: 'Kubernetes', score: 1 },
+  { skill: 'AWS', score: 0 },
+  { skill: 'GraphQL', score: 1 },
+];
+
+function validAnalysis({ matchScore: matchScoreOverride = {}, ...rest } = {}) {
   return {
-    matchScore: { requiredScore: 8, requiredTotal: 6, optionalMatched: 2, optionalTotal: 4 },
+    matchScore: {
+      requiredScore: 8,
+      requiredTotal: 6,
+      optionalMatched: 2,
+      optionalTotal: 4,
+      requiredBreakdown: VALID_REQUIRED_BREAKDOWN,
+      optionalBreakdown: VALID_OPTIONAL_BREAKDOWN,
+      ...matchScoreOverride,
+    },
     gaps: Array(5).fill(VALID_GAP),
     bullets: Array(3).fill(VALID_BULLET),
-    ...overrides,
+    ...rest,
   };
 }
 

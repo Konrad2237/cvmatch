@@ -12,16 +12,22 @@ const bulletSchema = z.object({
   rewritten: z.string(),           // Claude's rewritten version
 });
 
+const skillScoreSchema = z.object({
+  skill: z.string(),
+  score: z.number().min(0).max(2),
+});
+
 const analysisSchema = z.object({
   matchScore: z.object({
     requiredScore: z.number().min(0),
     requiredTotal: z.number().int().min(0),
     optionalMatched: z.number().int().min(0),
     optionalTotal: z.number().int().min(0),
+    requiredBreakdown: z.array(skillScoreSchema),
+    optionalBreakdown: z.array(skillScoreSchema),
   }),
   gaps: z.array(gapSchema).min(5),
   bullets: z.array(bulletSchema).min(3).max(5),
-  // TODO (Week 4): sectionScores, learningRoadmap
 });
 
 module.exports = { analysisSchema, gapSchema, bulletSchema };

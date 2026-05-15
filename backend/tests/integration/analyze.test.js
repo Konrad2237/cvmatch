@@ -94,7 +94,14 @@ describe('POST /analyze — walidacja wejścia', () => {
 describe('POST /analyze — happy path', () => {
   beforeEach(() => {
     analyzeCV.mockImplementation(async ({ onEvent }) => {
-      onEvent('score', { requiredScore: 8, requiredTotal: 6, optionalMatched: 2, optionalTotal: 4 });
+      onEvent('score', {
+        requiredScore: 8,
+        requiredTotal: 6,
+        optionalMatched: 2,
+        optionalTotal: 4,
+        requiredBreakdown: [{ skill: 'React', score: 2 }, { skill: 'Docker', score: 0 }],
+        optionalBreakdown: [{ skill: 'TypeScript', score: 1 }, { skill: 'CI/CD', score: 0 }],
+      });
       onEvent('gaps', VALID_GAPS);
       onEvent('bullets', VALID_BULLETS);
       onEvent('done', null);

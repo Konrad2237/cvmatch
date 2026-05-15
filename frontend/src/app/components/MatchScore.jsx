@@ -1,7 +1,9 @@
 // Props:
-//   score: { requiredScore, requiredTotal, optionalMatched, optionalTotal }
+//   score: { requiredScore, requiredTotal, optionalMatched, optionalTotal,
+//            requiredBreakdown, optionalBreakdown }
 export default function MatchScore({ score }) {
-  const { requiredScore, requiredTotal, optionalMatched, optionalTotal } = score;
+  const { requiredScore, requiredTotal, optionalMatched, optionalTotal,
+          requiredBreakdown = [], optionalBreakdown = [] } = score;
   const requiredMax = requiredTotal * 2;
   const pct = requiredMax > 0 ? Math.round((requiredScore / requiredMax) * 100) : 0;
 
@@ -47,6 +49,50 @@ export default function MatchScore({ score }) {
         />
       </div>
       <p className={`mt-2 text-sm font-medium ${color.text}`}>{pct}% dopasowania wymagań</p>
+
+      {/* Per-skill breakdown */}
+      {requiredBreakdown.length > 0 && (
+        <div className="mt-5 pt-4 border-t border-gray-100">
+          <BreakdownSection title="Wymagane" items={requiredBreakdown} max={2} />
+          {optionalBreakdown.length > 0 && (
+            <BreakdownSection title="Mile widziane" items={optionalBreakdown} max={1} className="mt-4" />
+          )}
+        </div>
+      )}
     </div>
+  );
+}
+
+function BreakdownSection({ title, items, max, className = '' }) {
+  return (
+    <div className={className}>
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{title}</p>
+      <div className="space-y-1.5">
+        {items.map((item, i) => (
+          <div key={i} className="flex items-center justify-between gap-4">
+            <span className="text-sm text-gray-700 truncate">{item.skill}</span>
+            <ScoreChip score={item.score} max={max} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ScoreChip({ score, max }) {
+  const ratio = max > 0 ? score / max : 0;
+  const colorClass =
+    ratio >= 1    ? 'text-green-700 bg-green-50' :
+    ratio >= 0.75 ? 'text-lime-700 bg-lime-50' :
+    ratio >= 0.5  ? 'text-yellow-700 bg-yellow-50' :
+    ratio > 0     ? 'text-orange-600 bg-orange-50' :
+                    'text-gray-400 bg-gray-50';
+
+  const label = `${score}/${max}`;
+
+  return (
+    <span className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${colorClass}`}>
+      {label}
+    </span>
   );
 }
