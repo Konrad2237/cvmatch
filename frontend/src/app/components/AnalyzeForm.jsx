@@ -1,42 +1,64 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+const LS_CV   = 'cvmatch_cv_text';
+const LS_EXTRA = 'cvmatch_extra_skills';
 
 // Props:
 //   onSubmit(formData: FormData) — called when user submits
 //   disabled: boolean            — true while analysis is running
 export default function AnalyzeForm({ onSubmit, disabled }) {
-  const [cvMode, setCvMode] = useState('text'); // 'text' | 'file'
-  const [cvText, setCvText] = useState('');
-  const [cvFile, setCvFile] = useState(null);
+  const [cvMode, setCvMode]       = useState('text'); // 'text' | 'file'
+  const [cvText, setCvText]       = useState('');
+  const [cvFile, setCvFile]       = useState(null);
+  const [extraSkills, setExtra]   = useState('');
   const [jobPosting, setJobPosting] = useState('');
+  const [saved, setSaved]         = useState(false);
+
+  // Load saved profile on first render
+  useEffect(() => {
+    const savedCv    = localStorage.getItem(LS_CV)    || '';
+    const savedExtra = localStorage.getItem(LS_EXTRA) || '';
+    if (savedCv)    setCvText(savedCv);
+    if (savedExtra) setExtra(savedExtra);
+  }, []);
+
+  function handleSave() {
+    localStorage.setItem(LS_CV,    cvText);
+    localStorage.setItem(LS_EXTRA, extraSkills);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
 
   function handleSubmit(e) {
     e.preventDefault();
 
-    // TODO: validate — at least one CV input must be non-empty
-    // TODO: validate — jobPosting must not be empty
-
     const formData = new FormData();
+
     if (cvMode === 'file' && cvFile) {
       formData.append('cvFile', cvFile);
     } else {
-      formData.append('cvText', cvText);
+      // Append extra skills so Claude sees full context
+      const fullCv = extraSkills.trim()
+        ? `${cvText}\n\n---\nDodatkowe umiejętności i kontekst (poza formalnym CV):\n${extraSkills}`
+        : cvText;
+      formData.append('cvText', fullCv);
     }
-    formData.append('jobPosting', jobPosting);
 
+    formData.append('jobPosting', jobPosting);
     onSubmit(formData);
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl border border-gray-200">
+
       {/* CV section */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Twoje CV
         </label>
 
-        {/* TODO: styled tab switcher — text | PDF */}
         <div className="flex gap-2 mb-3">
           <button
             type="button"
@@ -73,6 +95,43 @@ export default function AnalyzeForm({ onSubmit, disabled }) {
           />
         )}
       </div>
+
+      {/* Extra skills — only relevant in text mode */}
+      {cvMode === 'text' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Dodatkowe umiejętności
+          </label>
+          <p className="text-xs text-gray-400 mb-2">
+            Narzędzia i umiejętności których nie ma w CV — Claude doliczy je do analizy.
+          </p>
+          <textarea
+            value={extraSkills}
+            onChange={(e) => setExtra(e.target.value)}
+            placeholder="np. Midjourney, Make.com, Claude Code, n8n, Notion..."
+            rows={3}
+            disabled={disabled}
+            className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+          />
+        </div>
+      )}
+
+      {/* Save profile button — text mode only */}
+      {cvMode === 'text' && (
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={disabled}
+            className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          >
+            Zapisz profil
+          </button>
+          {saved && (
+            <span className="text-sm text-green-600 font-medium">Zapisano ✓</span>
+          )}
+        </div>
+      )}
 
       {/* Job posting section */}
       <div>
