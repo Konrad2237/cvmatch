@@ -10,6 +10,7 @@ export default function AnalyzeForm({ onSubmit, disabled }) {
   const [cvMode, setCvMode]         = useState('text'); // 'text' | 'file'
   const [cvFile, setCvFile]         = useState(null);
   const [jobPosting, setJobPosting] = useState('');
+  const [profileError, setProfileError] = useState('');
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -24,6 +25,12 @@ export default function AnalyzeForm({ onSubmit, disabled }) {
       const rawSkills = localStorage.getItem(LS_EXTRA);
       let skills = [];
       try { skills = JSON.parse(rawSkills) || []; } catch {}
+
+      if (!cvText.trim()) {
+        setProfileError('Profil jest pusty — przejdź do zakładki Profil i zapisz CV przed analizą.');
+        return;
+      }
+      setProfileError('');
 
       const fullCv = skills.length > 0
         ? `${cvText}\n\n---\nDodatkowe umiejętności i kontekst (poza formalnym CV):\n${skills.map(s => `- ${s}`).join('\n')}`
@@ -62,9 +69,9 @@ export default function AnalyzeForm({ onSubmit, disabled }) {
         </div>
 
         {cvMode === 'text' ? (
-          <p className="text-xs text-gray-400">
-            Analiza użyje CV i umiejętności zapisanych w zakładce <strong>Profil</strong>.
-          </p>
+          profileError
+            ? <p className="text-xs text-amber-600">{profileError}</p>
+            : <p className="text-xs text-gray-400">Analiza użyje CV i umiejętności zapisanych w zakładce <strong>Profil</strong>.</p>
         ) : (
           <input
             type="file"
