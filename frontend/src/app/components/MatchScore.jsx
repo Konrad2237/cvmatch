@@ -4,8 +4,10 @@
 export default function MatchScore({ score }) {
   const { requiredScore, requiredTotal, optionalMatched, optionalTotal,
           requiredBreakdown = [], optionalBreakdown = [] } = score;
-  const requiredMax = requiredTotal * 2;
-  const pct = requiredMax > 0 ? Math.round((requiredScore / requiredMax) * 100) : 0;
+  const requiredMax  = requiredTotal * 2;
+  const totalScore   = requiredScore + optionalMatched;
+  const totalMax     = requiredMax + optionalTotal;
+  const pct = totalMax > 0 ? Math.round((totalScore / totalMax) * 100) : 0;
 
   const color =
     pct >= 70 ? { bar: 'bg-green-500',  text: 'text-green-700',  bg: 'bg-green-50',  border: 'border-green-200' } :
@@ -41,14 +43,16 @@ export default function MatchScore({ score }) {
         )}
       </div>
 
-      {/* Progress bar — based on required score only */}
+      {/* Progress bar — combined required + optional */}
       <div className="w-full bg-gray-100 rounded-full h-3">
         <div
           className={`${color.bar} h-3 rounded-full transition-all duration-500`}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className={`mt-2 text-sm font-medium ${color.text}`}>{pct}% dopasowania wymagań</p>
+      <p className={`mt-2 text-sm font-medium ${color.text}`}>
+        {totalScore} z {totalMax} pkt łącznie • {pct}% dopasowania
+      </p>
 
       {/* Per-skill breakdown */}
       {requiredBreakdown.length > 0 && (
