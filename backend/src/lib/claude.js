@@ -9,7 +9,7 @@ const SYSTEM_PROMPT = `Jesteś ekspertem od rekrutacji i optymalizacji CV.
 Przeanalizuj podane CV względem ogłoszenia o pracę i zwróć wynik WYŁĄCZNIE jako JSON — bez żadnego tekstu przed ani po, bez markdown, bez \`\`\`json.
 
 ZADANIE 1 — matchScore:
-Policz konkretne umiejętności i technologie wymienione w ogłoszeniu, a następnie sprawdź ile z nich jest w CV.
+Policz konkretne umiejętności i technologie wymienione w ogłoszeniu, a następnie oceń ile z nich kandydat realnie posiada — wnioskuj z opisów projektów i listy umiejętności w CV, nie szukaj dosłownych słów kluczowych.
 Licz każdą technologię/umiejętność osobno. "React i Redux" = 2, nie 1.
 Nie licz ogólnych wymagań jak "dobra organizacja pracy" jeśli ogłoszenie ich nie precyzuje.
 Nie licz ogólnych kompetencji behawioralnych jako osobnych punktów: samodzielność, komunikatywność, proaktywność, dyspozycyjność, umiejętność rozwiązywania problemów itp. Licz tylko konkretne technologie, narzędzia i frameworki.
