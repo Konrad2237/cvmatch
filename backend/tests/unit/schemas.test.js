@@ -15,7 +15,7 @@ const VALID_BULLET = {
 
 function validAnalysis(overrides = {}) {
   return {
-    matchScore: { matched: 8, total: 12 },
+    matchScore: { requiredScore: 8, requiredTotal: 6, optionalMatched: 2, optionalTotal: 4 },
     gaps: Array(5).fill(VALID_GAP),
     bullets: Array(3).fill(VALID_BULLET),
     ...overrides,
@@ -81,11 +81,11 @@ describe('analysisSchema', () => {
     expect(() => analysisSchema.parse(validAnalysis({ bullets: Array(6).fill(VALID_BULLET) }))).toThrow();
   });
 
-  it('rejects negative matched', () => {
-    expect(() => analysisSchema.parse(validAnalysis({ matchScore: { matched: -1, total: 10 } }))).toThrow();
+  it('rejects negative requiredScore', () => {
+    expect(() => analysisSchema.parse(validAnalysis({ matchScore: { requiredScore: -1, requiredTotal: 6, optionalMatched: 0, optionalTotal: 0 } }))).toThrow();
   });
 
-  it('passes when matched > total — known gap, schema has no .refine() guard', () => {
-    expect(() => analysisSchema.parse(validAnalysis({ matchScore: { matched: 15, total: 10 } }))).not.toThrow();
+  it('accepts zero optionalTotal when job has no optional requirements', () => {
+    expect(() => analysisSchema.parse(validAnalysis({ matchScore: { requiredScore: 8, requiredTotal: 6, optionalMatched: 0, optionalTotal: 0 } }))).not.toThrow();
   });
 });

@@ -14,21 +14,39 @@ Licz każdą technologię/umiejętność osobno. "React i Redux" = 2, nie 1.
 Nie licz ogólnych wymagań jak "dobra organizacja pracy" jeśli ogłoszenie ich nie precyzuje.
 Nie licz ogólnych kompetencji behawioralnych jako osobnych punktów: samodzielność, komunikatywność, proaktywność, dyspozycyjność, umiejętność rozwiązywania problemów itp. Licz tylko konkretne technologie, narzędzia i frameworki.
 Jeśli ogłoszenie wymienia alternatywy dla tej samej umiejętności ("Playwright, Cypress lub Pytest" / "Pinecone, Weaviate lub FAISS"), licz je jako JEDNĄ umiejętność w matchScore, nie N osobnych.
-Traktuj narzędzia funkcjonalnie równoważne jako matched w score — kandydat zna tę kategorię narzędzi, nawet jeśli używał innego produktu:
+Tabela funkcjonalnych odpowiedników (kandydat zna kategorię, nawet jeśli używał innego produktu):
 - Automatyzacja workflow: n8n ↔ Make.com ↔ Zapier
 - Vector DB: pgvector ↔ Pinecone ↔ Weaviate ↔ FAISS ↔ Qdrant
 - LLM frameworki: LangGraph ↔ LangChain ↔ LlamaIndex
 - LLM API: Claude API ↔ OpenAI API ↔ Gemini API
 - PaaS hosting: Railway ↔ Render ↔ Fly.io ↔ Heroku
 - Relacyjne bazy: PostgreSQL ↔ MySQL ↔ MSSQL
-Zasada: jeśli wymaganie OPCJONALNE i kandydat ma odpowiednik → licz jako matched, nie dodawaj gap.
-Zasada: jeśli wymaganie OBOWIĄZKOWE i kandydat ma odpowiednik → licz jako matched, ale dodaj gap z [Wymagane] i krótką oceną różnicy.
+
+Punktuj każdą wymaganą umiejętność w skali 0–2 (możliwe wartości pośrednie jak 0.5, 1.5):
+- 2 pkt: kandydat posiada bezpośrednio
+- 1.5 pkt: kandydat ma bliski odpowiednik z tabeli powyżej
+- 1 pkt: kandydat ma pokrewną technologię z tego samego ekosystemu, transferowalność wymaga nauki
+- 0.5 pkt: kandydat ma luźno powiązane doświadczenie
+- 0 pkt: brak
+
+Punktuj każdą opcjonalną umiejętność (sekcja "Mile widziane" lub podobna) w skali 0–1:
+- 1 pkt: kandydat posiada lub ma odpowiednik
+- 0 pkt: brak
+
+Zwróć w matchScore:
+- requiredScore: suma punktów za wymagane (może być ułamkowa, np. 8.5)
+- requiredTotal: liczba wymaganych umiejętności
+- optionalMatched: liczba opcjonalnych które kandydat posiada
+- optionalTotal: liczba opcjonalnych umiejętności w ogłoszeniu (0 jeśli brak sekcji)
+
+Zasada: jeśli wymaganie OPCJONALNE i kandydat ma odpowiednik → optionalMatched += 1, nie dodawaj gap.
+Zasada: jeśli wymaganie OBOWIĄZKOWE i kandydat ma odpowiednik → requiredScore += 1, dodaj gap z [Wymagane] i krótką oceną różnicy.
 
 ZADANIE 2 — gaps (minimum 5):
 Wypisz czego brakuje w CV względem ogłoszenia. Każdy brak musi mieć:
 - skill: konkretna nazwa (np. "Docker", nie "konteneryzacja"); jeśli ogłoszenie wymienia alternatywy — zapisz jako grupę: "Playwright/Cypress/Pytest"
 - category: dokładnie jedna z: "Technologia" | "Soft skill" | "Certyfikat"
-- detail: zacznij od [Wymagane] lub [Mile widziane] zależnie od sekcji ogłoszenia, następnie WHERE w ogłoszeniu i WHY to brakuje. Jeśli kandydat ma pokrewną technologię z tego samego ekosystemu (np. LangGraph zamiast LangChain, pgvector zamiast Pinecone, Claude API zamiast Gemini API), zaznacz to i krótko oceń czy umiejętność jest transferowalna.
+- detail: zacznij od [Wymagane], [Mile widziane] lub [Wymagane implicite] zależnie od sekcji ogłoszenia; użyj [Wymagane implicite] gdy wymaganie jasno wynika z kontekstu roli, ale nie jest explicite wymienione w sekcji wymagań; następnie WHERE w ogłoszeniu i WHY to brakuje. Jeśli kandydat ma pokrewną technologię z tego samego ekosystemu (np. LangGraph zamiast LangChain, pgvector zamiast Pinecone, Claude API zamiast Gemini API), zaznacz to i krótko oceń czy umiejętność jest transferowalna.
 
 NIEDOZWOLONY przykład braku (zbyt ogólny):
 {"skill":"umiejętności techniczne","category":"Technologia","detail":"brakuje doświadczenia technicznego"}
@@ -58,8 +76,10 @@ DOBRY przykład przepisania (wyciąga konkret z ogólnego):
 Format odpowiedzi (TYLKO ten JSON, zero tekstu przed ani po):
 {
   "matchScore": {
-    "matched": <liczba całkowita>,
-    "total": <liczba całkowita>
+    "requiredScore": <suma punktów za wymagane, może być ułamkowa np. 8.5>,
+    "requiredTotal": <liczba wymaganych umiejętności, liczba całkowita>,
+    "optionalMatched": <liczba opcjonalnych które kandydat posiada, liczba całkowita>,
+    "optionalTotal": <liczba opcjonalnych umiejętności w ogłoszeniu, liczba całkowita>
   },
   "gaps": [
     {

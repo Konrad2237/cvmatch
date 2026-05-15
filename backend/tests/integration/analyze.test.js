@@ -94,7 +94,7 @@ describe('POST /analyze — walidacja wejścia', () => {
 describe('POST /analyze — happy path', () => {
   beforeEach(() => {
     analyzeCV.mockImplementation(async ({ onEvent }) => {
-      onEvent('score', { matched: 8, total: 12 });
+      onEvent('score', { requiredScore: 8, requiredTotal: 6, optionalMatched: 2, optionalTotal: 4 });
       onEvent('gaps', VALID_GAPS);
       onEvent('bullets', VALID_BULLETS);
       onEvent('done', null);
@@ -119,12 +119,14 @@ describe('POST /analyze — happy path', () => {
     expect(types).toContain('done');
   });
 
-  it('score.payload zawiera matched i total', async () => {
+  it('score.payload zawiera requiredScore, requiredTotal, optionalMatched, optionalTotal', async () => {
     const res = await postSSE({ cvText: SAMPLE_CV, jobPosting: SAMPLE_JOB });
     const scoreEvent = parseSSE(res.body).find(e => e.type === 'score');
 
-    expect(scoreEvent.payload.matched).toBe(8);
-    expect(scoreEvent.payload.total).toBe(12);
+    expect(scoreEvent.payload.requiredScore).toBe(8);
+    expect(scoreEvent.payload.requiredTotal).toBe(6);
+    expect(scoreEvent.payload.optionalMatched).toBe(2);
+    expect(scoreEvent.payload.optionalTotal).toBe(4);
   });
 
   it('wywołuje analyzeCV z przyciętym CV i ogłoszeniem', async () => {

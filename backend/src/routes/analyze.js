@@ -13,7 +13,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 //   cvFile     — PDF upload        (required if no cvText)
 //   jobPosting — job posting text  (always required)
 // Returns: text/event-stream (SSE)
-//   data: {"type":"score",  "payload":{"matched":9,"total":14}}
+//   data: {"type":"score",  "payload":{"requiredScore":8,"requiredTotal":6,"optionalMatched":2,"optionalTotal":4}}
 //   data: {"type":"gaps",   "payload":[...]}
 //   data: {"type":"bullets","payload":[...]}
 //   data: {"type":"done"}

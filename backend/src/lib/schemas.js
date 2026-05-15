@@ -14,8 +14,10 @@ const bulletSchema = z.object({
 
 const analysisSchema = z.object({
   matchScore: z.object({
-    matched: z.number().int().min(0), // e.g. 9
-    total: z.number().int().min(0),   // e.g. 14
+    requiredScore: z.number().min(0),
+    requiredTotal: z.number().int().min(0),
+    optionalMatched: z.number().int().min(0),
+    optionalTotal: z.number().int().min(0),
   }),
   gaps: z.array(gapSchema).min(5),
   bullets: z.array(bulletSchema).min(3).max(5),
