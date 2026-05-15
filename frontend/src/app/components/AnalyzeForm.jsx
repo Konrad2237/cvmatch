@@ -1,55 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-
-const LS_CV    = 'cvmatch_cv_text';
-const LS_EXTRA = 'cvmatch_extra_skills';
+import { useState } from 'react';
+import { LS_CV, LS_EXTRA } from './ProfileTab';
 
 // Props:
 //   onSubmit(formData: FormData) — called when user submits
 //   disabled: boolean            — true while analysis is running
 export default function AnalyzeForm({ onSubmit, disabled }) {
-  const [cvMode, setCvMode]     = useState('text'); // 'text' | 'file'
-  const [cvText, setCvText]     = useState('');
-  const [cvFile, setCvFile]     = useState(null);
-  const [skills, setSkills]     = useState([]);   // saved chips
-  const [skillInput, setSkillInput] = useState(''); // current input value
+  const [cvMode, setCvMode]         = useState('text'); // 'text' | 'file'
+  const [cvFile, setCvFile]         = useState(null);
   const [jobPosting, setJobPosting] = useState('');
-  const [saved, setSaved]       = useState(false);
-  const inputRef = useRef(null);
-
-  // Load saved profile on first render
-  useEffect(() => {
-    const savedCv     = localStorage.getItem(LS_CV) || '';
-    const savedSkills = localStorage.getItem(LS_EXTRA);
-    if (savedCv) setCvText(savedCv);
-    if (savedSkills) {
-      try { setSkills(JSON.parse(savedSkills)); } catch {}
-    }
-  }, []);
-
-  function addSkill() {
-    const val = skillInput.trim();
-    if (!val || skills.includes(val)) return;
-    setSkills(prev => [...prev, val]);
-    setSkillInput('');
-    inputRef.current?.focus();
-  }
-
-  function removeSkill(skill) {
-    setSkills(prev => prev.filter(s => s !== skill));
-  }
-
-  function handleKeyDown(e) {
-    if (e.key === 'Enter') { e.preventDefault(); addSkill(); }
-  }
-
-  function handleSave() {
-    localStorage.setItem(LS_CV,    cvText);
-    localStorage.setItem(LS_EXTRA, JSON.stringify(skills));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -59,9 +19,16 @@ export default function AnalyzeForm({ onSubmit, disabled }) {
     if (cvMode === 'file' && cvFile) {
       formData.append('cvFile', cvFile);
     } else {
+      // Read saved profile from localStorage
+      const cvText = localStorage.getItem(LS_CV) || '';
+      const rawSkills = localStorage.getItem(LS_EXTRA);
+      let skills = [];
+      try { skills = JSON.parse(rawSkills) || []; } catch {}
+
       const fullCv = skills.length > 0
         ? `${cvText}\n\n---\nDodatkowe umiejętności i kontekst (poza formalnym CV):\n${skills.map(s => `- ${s}`).join('\n')}`
         : cvText;
+
       formData.append('cvText', fullCv);
     }
 
@@ -72,19 +39,18 @@ export default function AnalyzeForm({ onSubmit, disabled }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl border border-gray-200">
 
-      {/* CV section */}
+      {/* CV source selector */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Twoje CV
+          CV
         </label>
-
         <div className="flex gap-2 mb-3">
           <button
             type="button"
             onClick={() => setCvMode('text')}
             className={`text-sm px-3 py-1 rounded-md border ${cvMode === 'text' ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 text-gray-600'}`}
           >
-            Wklej tekst
+            Z profilu
           </button>
           <button
             type="button"
@@ -96,14 +62,9 @@ export default function AnalyzeForm({ onSubmit, disabled }) {
         </div>
 
         {cvMode === 'text' ? (
-          <textarea
-            value={cvText}
-            onChange={(e) => setCvText(e.target.value)}
-            placeholder="Wklej treść CV..."
-            rows={8}
-            disabled={disabled}
-            className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
-          />
+          <p className="text-xs text-gray-400">
+            Analiza użyje CV i umiejętności zapisanych w zakładce <strong>Profil</strong>.
+          </p>
         ) : (
           <input
             type="file"
@@ -115,80 +76,7 @@ export default function AnalyzeForm({ onSubmit, disabled }) {
         )}
       </div>
 
-      {/* Extra skills chip input — text mode only */}
-      {cvMode === 'text' && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Dodatkowe umiejętności
-          </label>
-          <p className="text-xs text-gray-400 mb-2">
-            Narzędzia i umiejętności których nie ma w CV — Claude doliczy je do analizy.
-          </p>
-
-          {/* Chips */}
-          {skills.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2">
-              {skills.map(skill => (
-                <span
-                  key={skill}
-                  className="inline-flex items-center gap-1 text-sm bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-full"
-                >
-                  {skill}
-                  <button
-                    type="button"
-                    onClick={() => removeSkill(skill)}
-                    disabled={disabled}
-                    className="text-blue-400 hover:text-blue-700 leading-none disabled:opacity-50"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Input + Add button */}
-          <div className="flex gap-2">
-            <input
-              ref={inputRef}
-              type="text"
-              value={skillInput}
-              onChange={(e) => setSkillInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Wpisz umiejętność i naciśnij Enter lub Dodaj..."
-              disabled={disabled}
-              className="flex-1 border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
-            />
-            <button
-              type="button"
-              onClick={addSkill}
-              disabled={disabled || !skillInput.trim()}
-              className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors"
-            >
-              Dodaj
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Save profile button — text mode only */}
-      {cvMode === 'text' && (
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={disabled}
-            className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
-          >
-            Zapisz profil
-          </button>
-          {saved && (
-            <span className="text-sm text-green-600 font-medium">Zapisano ✓</span>
-          )}
-        </div>
-      )}
-
-      {/* Job posting section */}
+      {/* Job posting */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Ogłoszenie o pracę
@@ -197,7 +85,7 @@ export default function AnalyzeForm({ onSubmit, disabled }) {
           value={jobPosting}
           onChange={(e) => setJobPosting(e.target.value)}
           placeholder="Wklej treść ogłoszenia z Pracuj.pl / LinkedIn..."
-          rows={6}
+          rows={8}
           disabled={disabled}
           className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
         />

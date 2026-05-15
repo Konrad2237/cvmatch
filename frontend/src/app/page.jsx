@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import AnalyzeForm from './components/AnalyzeForm';
+import ProfileTab from './components/ProfileTab';
 import MatchScore from './components/MatchScore';
 import GapAnalysis from './components/GapAnalysis';
 import BulletPoints from './components/BulletPoints';
@@ -10,7 +11,8 @@ import StreamingStatus from './components/StreamingStatus';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function Home() {
-  const [status, setStatus] = useState('idle'); // idle | loading | done | error
+  const [tab, setTab]       = useState('analiza'); // 'analiza' | 'profil'
+  const [status, setStatus] = useState('idle');    // idle | loading | done | error
   const [errorMessage, setErrorMessage] = useState('');
   const [results, setResults] = useState({
     matchScore: null,
@@ -110,22 +112,45 @@ export default function Home() {
     <main className="min-h-screen py-12 px-4">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">CVMatch</h1>
-        <p className="text-gray-500 mb-8">
+        <p className="text-gray-500 mb-6">
           Wklej CV i ogłoszenie — dostań konkretny feedback w 30 sekund.
         </p>
 
-        <AnalyzeForm onSubmit={handleAnalyze} disabled={status === 'loading'} />
+        {/* Tab navigation */}
+        <div className="flex gap-1 mb-6 border-b border-gray-200">
+          {['analiza', 'profil'].map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-5 py-2.5 text-sm font-medium capitalize border-b-2 -mb-px transition-colors ${
+                tab === t
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {t === 'analiza' ? 'Analiza' : 'Profil'}
+            </button>
+          ))}
+        </div>
 
-        {status === 'loading' && <StreamingStatus />}
+        {tab === 'profil' && <ProfileTab />}
 
-        {results.matchScore && <MatchScore score={results.matchScore} />}
-        {results.gaps && <GapAnalysis gaps={results.gaps} />}
-        {results.bullets && <BulletPoints bullets={results.bullets} />}
+        {tab === 'analiza' && (
+          <>
+            <AnalyzeForm onSubmit={handleAnalyze} disabled={status === 'loading'} />
 
-        {status === 'error' && (
-          <p className="mt-6 text-sm text-red-600">
-            {errorMessage}
-          </p>
+            {status === 'loading' && <StreamingStatus />}
+
+            {results.matchScore && <MatchScore score={results.matchScore} />}
+            {results.gaps && <GapAnalysis gaps={results.gaps} />}
+            {results.bullets && <BulletPoints bullets={results.bullets} />}
+
+            {status === 'error' && (
+              <p className="mt-6 text-sm text-red-600">
+                {errorMessage}
+              </p>
+            )}
+          </>
         )}
       </div>
     </main>
