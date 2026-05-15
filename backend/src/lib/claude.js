@@ -130,7 +130,7 @@ async function analyzeCV({ cvText, cvFile, mimetype, jobPosting, onEvent }) {
   try {
     const stream = client.messages.stream({
       model: process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001',
-      max_tokens: 2048,
+      max_tokens: 4096,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content }],
     });
