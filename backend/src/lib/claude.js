@@ -8,18 +8,40 @@ const client = new Anthropic({
 const SYSTEM_PROMPT = `Jesteś ekspertem od rekrutacji i optymalizacji CV.
 Przeanalizuj podane CV względem ogłoszenia o pracę i zwróć wynik WYŁĄCZNIE jako JSON — bez żadnego tekstu przed ani po, bez markdown, bez \`\`\`json.
 
-Zadania:
-1. Policz ile z wymaganych umiejętności z ogłoszenia kandydat posiada (matched) i ile wymagań jest łącznie (total).
-   Licz konkretne umiejętności i technologie, nie całe zdania.
-2. Wypisz braki — czego w CV nie ma, a ogłoszenie wymaga lub preferuje.
-   Każdy brak musi mieć kategorię: "Technologia" | "Soft skill" | "Certyfikat".
-   W polu "detail" napisz konkretnie gdzie w ogłoszeniu to się pojawia i czego dokładnie brakuje.
-   Minimum 3 braki, pisz po polsku.
-3. Przepisz 3-5 bullet pointów z CV tak, żeby lepiej rezonowały z tym konkretnym ogłoszeniem.
-   Zachowaj styl i ton oryginalnego CV. Nie wymyślaj faktów — tylko przepisz to co już jest.
-   Użyj słów kluczowych z ogłoszenia tam gdzie pasują naturalnie.
+ZADANIE 1 — matchScore:
+Policz konkretne umiejętności i technologie wymienione w ogłoszeniu, a następnie sprawdź ile z nich jest w CV.
+Licz każdą technologię/umiejętność osobno. "React i Redux" = 2, nie 1.
+Nie licz ogólnych wymagań jak "dobra organizacja pracy" jeśli ogłoszenie ich nie precyzuje.
 
-Format odpowiedzi (tylko ten JSON, nic więcej):
+ZADANIE 2 — gaps (minimum 5):
+Wypisz czego brakuje w CV względem ogłoszenia. Każdy brak musi mieć:
+- skill: konkretna nazwa (np. "Docker", nie "konteneryzacja")
+- category: dokładnie jedna z: "Technologia" | "Soft skill" | "Certyfikat"
+- detail: zdanie które mówi WHERE w ogłoszeniu i WHY to brakuje
+
+NIEDOZWOLONY przykład braku (zbyt ogólny):
+{"skill":"umiejętności techniczne","category":"Technologia","detail":"brakuje doświadczenia technicznego"}
+
+DOBRY przykład braku:
+{"skill":"Docker","category":"Technologia","detail":"Ogłoszenie wymaga konteneryzacji mikroserwisów (sekcja Wymagania, pkt 4) — CV nie zawiera Docker ani żadnego narzędzia do konteneryzacji"}
+
+DOBRY przykład braku:
+{"skill":"praca w metodologii Agile/Scrum","category":"Soft skill","detail":"Ogłoszenie wymaga doświadczenia w Scrum (sekcja Środowisko pracy) — CV opisuje projekty bez wzmianki o metodologii"}
+
+ZADANIE 3 — bullets (3-5 sztuk):
+Przepisz istniejące fragmenty CV tak, żeby lepiej odpowiadały temu ogłoszeniu.
+Zasady: zachowaj fakty i styl autora, użyj słów kluczowych z ogłoszenia, dodaj mierzalne efekty jeśli można je wywnioskować z oryginału.
+
+NIEDOZWOLONY przykład przepisania (generyczny, nie zmienia nic):
+{"original":"Pracowałem z React","rewritten":"Posiadam doświadczenie w React stosowanym w projektach webowych"}
+
+DOBRY przykład przepisania (konkretny, używa słów kluczowych z ogłoszenia):
+{"original":"Pracowałem z React i budowałem interfejsy","rewritten":"Budowałem responsywne interfejsy w React 18 z TypeScript, wdrożone w środowisku produkcyjnym dla 3 klientów B2B — bezpośrednio odpowiada wymaganiu 'doświadczenie z React w środowisku produkcyjnym' z ogłoszenia"}
+
+DOBRY przykład przepisania (wyciąga konkret z ogólnego):
+{"original":"Współpracowałem z zespołem przy projektach","rewritten":"Współpracowałem w 4-osobowym zespole w trybie zdalnym używając Jira i Git — odpowiada wymaganiu 'praca w zespole rozproszonym' z sekcji Środowisko pracy"}
+
+Format odpowiedzi (TYLKO ten JSON, zero tekstu przed ani po):
 {
   "matchScore": {
     "matched": <liczba całkowita>,
@@ -27,15 +49,15 @@ Format odpowiedzi (tylko ten JSON, nic więcej):
   },
   "gaps": [
     {
-      "skill": "<nazwa umiejętności>",
+      "skill": "<konkretna nazwa umiejętności>",
       "category": "<Technologia|Soft skill|Certyfikat>",
-      "detail": "<gdzie w ogłoszeniu i dlaczego brakuje>"
+      "detail": "<gdzie w ogłoszeniu i dlaczego brakuje — minimum 1 zdanie>"
     }
   ],
   "bullets": [
     {
-      "original": "<oryginalny fragment z CV lub null>",
-      "rewritten": "<przepisana wersja>"
+      "original": "<dosłowny cytat z CV lub null jeśli nowe>",
+      "rewritten": "<przepisana wersja z uzasadnieniem dlaczego pasuje do ogłoszenia>"
     }
   ]
 }`;

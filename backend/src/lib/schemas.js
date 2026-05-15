@@ -17,7 +17,7 @@ const analysisSchema = z.object({
     matched: z.number().int().min(0), // e.g. 9
     total: z.number().int().min(0),   // e.g. 14
   }),
-  gaps: z.array(gapSchema).min(3),
+  gaps: z.array(gapSchema).min(5),
   bullets: z.array(bulletSchema).min(3).max(5),
   // TODO (Week 4): sectionScores, learningRoadmap
 });
