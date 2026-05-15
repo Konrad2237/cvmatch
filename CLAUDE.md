@@ -69,15 +69,22 @@ cvmatch/
 │
 ├── backend/                  ← Express.js, deploy: Render.com
 │   ├── .env                  ← ANTHROPIC_API_KEY, PORT=3001, FRONTEND_URL
-│   ├── package.json          ← CommonJS; express, @anthropic-ai/sdk, multer@2, zod, cors, dotenv
+│   ├── package.json          ← CommonJS; express, @anthropic-ai/sdk, multer@2, zod, cors, dotenv, supertest (dev)
 │   ├── railway.toml          ← historyczny, nieużywany (Railway zastąpiony przez Render)
 │   └── src/
-│       ├── index.js          ← serwer Express, CORS z env, /health endpoint
+│       ├── app.js            ← Express setup: CORS, routes, /health — eksportuje app (bez listen)
+│       ├── index.js          ← tylko app.listen(PORT) — split wymagany żeby supertest działał
 │       ├── routes/
 │       │   └── analyze.js    ← POST /analyze: walidacja → SSE headers → keepalive → analyzeCV()
 │       └── lib/
 │           ├── claude.js     ← analyzeCV(), SYSTEM_PROMPT z few-shot examples, extractJSON(), token logging
 │           └── schemas.js    ← Zod: analysisSchema (gaps min 5), gapSchema, bulletSchema
+│   └── tests/
+│       ├── unit/
+│       │   ├── extractJSON.test.js  ← 7 testów jednostkowych (bez API)
+│       │   └── schemas.test.js      ← 14 testów Zod schemas
+│       └── integration/
+│           └── analyze.test.js      ← 10 testów POST /analyze z mocked analyzeCV
 │
 └── frontend/                 ← Next.js 14 App Router, deploy: Vercel
     ├── .env.local            ← NEXT_PUBLIC_API_URL=http://localhost:3001 (tylko lokalnie)
@@ -89,7 +96,7 @@ cvmatch/
         ├── globals.css
         └── components/
             ├── AnalyzeForm.jsx      ← formularz, tab tekst/PDF, buduje FormData
-            ├── MatchScore.jsx       ← "X z Y umiejętności", pasek postępu, 3 kolory wg progu
+            ├── MatchScore.jsx       ← "X z Y pkt wymaganych • A z B mile widzianych", pasek postępu (required only)
             ├── GapAnalysis.jsx      ← lista braków z badge kategorii
             ├── BulletPoints.jsx     ← bullet pointy + clipboard copy z feedbackiem 2s
             └── StreamingStatus.jsx  ← spinner podczas SSE
@@ -142,16 +149,22 @@ cvmatch/
 
 ```
 backend/src/index.js
-  └── routes/analyze.js
-        ├── lib/claude.js
-        │     └── lib/schemas.js   ← analysisSchema
-        └── multer (npm)
+  └── src/app.js                  ← app setup (importowalny przez testy)
+        └── routes/analyze.js
+              ├── lib/claude.js
+              │     └── lib/schemas.js   ← analysisSchema
+              └── multer (npm)
+
+backend/tests/
+  ├── unit/extractJSON.test.js    ← testuje tylko extractJSON(), brak side-effectów
+  ├── unit/schemas.test.js        ← testuje Zod schemas
+  └── integration/analyze.test.js ← jest.mock('../../src/lib/claude') → mocked analyzeCV
 
 frontend/src/app/page.jsx
-  ├── AnalyzeForm.jsx   → onSubmit(FormData)
-  ├── MatchScore.jsx    → props: { matched: number, total: number }
-  ├── GapAnalysis.jsx   → props: Array<{ skill, category, detail }>
-  ├── BulletPoints.jsx  → props: Array<{ original?, rewritten }>
+  ├── AnalyzeForm.jsx      → onSubmit(FormData)
+  ├── MatchScore.jsx       → props: { requiredScore, requiredTotal, optionalMatched, optionalTotal }
+  ├── GapAnalysis.jsx      → props: Array<{ skill, category, detail }>
+  ├── BulletPoints.jsx     → props: Array<{ original?, rewritten }>
   └── StreamingStatus.jsx  → brak props
 ```
 
@@ -185,6 +198,9 @@ Log w konsoli backendu po każdym requeście: `[claude] model=... input=X output
 - **Progresywny render** — `score`, `gaps`, `bullets` to oddzielne eventy, UI renderuje każdy gdy przyjdzie
 - **Few-shot examples w prompcie** — pary NIEDOZWOLONY/DOBRY skuteczniej uczą model co to "konkretny output" niż same instrukcje słowne
 - **Haiku dla analizy CV** — zadanie porównania tekstu nie wymaga Sonnet; 4x tańszy przy identycznej jakości
+- **Semantic reasoning w SYSTEM_PROMPT** — framing "oceń czy kandydat posiada" zamiast "sprawdź czy jest słowo kluczowe w CV"; model wnioskuje z opisów projektów, nie szuka literalnych matchów
+- **Testy z mocked Claude** — `jest.mock('../lib/claude')` w testach integracyjnych; testy sprawdzają kontrakt SSE (czy aplikacja poprawnie parsuje i strumieniuje), nie jakość modelu AI
+- **Decimal separator explicite w prompcie** — polskojęzyczny prompt powoduje że Haiku domyślnie pisze `8,5` zamiast `8.5`; zawsze dodaj "używaj kropki jako separatora dziesiętnego" przy liczbach ułamkowych w JSON
 
 ### NIE robimy
 
@@ -216,12 +232,15 @@ Log w konsoli backendu po każdym requeście: `[claude] model=... input=X output
 
 ### Następne (MVP plan)
 
-**Tydzień 3:**
-- Token streaming — wyniki pojawiają się słowo po słowie zamiast bloku naraz
-- Testy na 5 CV + 10 ogłoszeń z Pracuj.pl/LinkedIn, iteracja promptu
-- Fix błędów UX wykrytych podczas testów
+**Tydzień 3: ✅ ZAKOŃCZONY**
+- ~~Token streaming~~ — odrzucony: JSON wymaga pełnej odpowiedzi; spinner wystarczy dla narzędzia osobistego
+- ✅ Testy: 31 testów (7 unit extractJSON + 14 unit schemas + 10 integracyjnych)
+- ✅ Iteracja promptu: 10 testów na prawdziwych CV, 2 rundy poprawek
+- ✅ Weighted scoring: requiredScore (0–2 per skill, ułamkowy) + optionalMatched/Total
+- ✅ Fix event.message bug w page.jsx, max_tokens 2048→4096
 
 **Tydzień 4 (Should Have):**
+- Breakdown "za co dostałem punkty" — lista wymaganych umiejętności z punktacją (0/1.5/2) obok gaps
 - Historia analiz w Supabase (tabela: CV hash, ogłoszenie, wyniki)
 - Profil użytkownika w localStorage — zapisane CV i umiejętności, bez wklejania za każdym razem
 - Sekcyjna ocena CV (Doświadczenie / Umiejętności / Wykształcenie)

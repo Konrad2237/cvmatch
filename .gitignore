@@ -22,9 +22,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Internal docs
-docs/
-
 # Logs and test files
 logi.txt
 testy.txt
