@@ -24,3 +24,9 @@ Thumbs.db
 
 # Internal docs
 docs/
+
+# Logs and test files
+logi.txt
+
+# Claude Code
+.claude/

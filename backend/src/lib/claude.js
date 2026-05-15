@@ -125,7 +125,9 @@ async function analyzeCV({ cvText, cvFile, mimetype, jobPosting, onEvent }) {
       fullText += chunk;
     });
 
-    await stream.finalMessage();
+    const finalMsg = await stream.finalMessage();
+    const { input_tokens, output_tokens } = finalMsg.usage;
+    console.log(`[claude] model=${finalMsg.model} input=${input_tokens} output=${output_tokens} total=${input_tokens + output_tokens}`);
 
     // Parse and validate
     const raw = extractJSON(fullText);
