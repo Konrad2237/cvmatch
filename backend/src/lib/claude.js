@@ -33,16 +33,12 @@ Punktuj każdą opcjonalną umiejętność (sekcja "Mile widziane" lub podobna) 
 - 1 pkt: kandydat posiada lub ma odpowiednik
 - 0 pkt: brak
 
-Zwróć w matchScore:
-- requiredScore: suma punktów za wymagane (może być ułamkowa — używaj kropki jako separatora: 8.5 nie 8,5)
-- requiredTotal: liczba wymaganych umiejętności
-- optionalMatched: liczba opcjonalnych które kandydat posiada
-- optionalTotal: liczba opcjonalnych umiejętności w ogłoszeniu (0 jeśli brak sekcji)
-- requiredBreakdown: lista każdej wymaganej umiejętności z przyznanym score — {"skill": "...", "score": 0|0.5|1|1.5|2}; kolejność jak w ogłoszeniu
-- optionalBreakdown: lista każdej opcjonalnej umiejętności z przyznanym score — {"skill": "...", "score": 0|1}; puste gdy optionalTotal === 0
+Zwróć w matchScore TYLKO dwie listy:
+- requiredBreakdown: każda wymagana umiejętność z przyznanym score — {"skill": "...", "score": 0|0.5|1|1.5|2}; kolejność jak w ogłoszeniu
+- optionalBreakdown: każda opcjonalna umiejętność z przyznanym score — {"skill": "...", "score": 0|1}; pusta lista [] gdy brak sekcji "Mile widziane"
 
-Zasada: jeśli wymaganie OPCJONALNE i kandydat ma odpowiednik → optionalMatched += 1, nie dodawaj gap.
-Zasada: jeśli wymaganie OBOWIĄZKOWE i kandydat ma odpowiednik → requiredScore += 1, dodaj gap z [Wymagane] i krótką oceną różnicy.
+Zasada: jeśli wymaganie OPCJONALNE i kandydat ma odpowiednik → score: 1 w optionalBreakdown, nie dodawaj gap.
+Zasada: jeśli wymaganie OBOWIĄZKOWE i kandydat ma odpowiednik → score proporcjonalny w requiredBreakdown, dodaj gap z [Wymagane] i krótką oceną różnicy.
 
 ZADANIE 2 — gaps (minimum 5):
 Wypisz czego brakuje w CV względem ogłoszenia. Każdy brak musi mieć:
@@ -75,23 +71,9 @@ DOBRY przykład przepisania (konkretny, używa słów kluczowych z ogłoszenia):
 DOBRY przykład przepisania (wyciąga konkret z ogólnego):
 {"original":"Współpracowałem z zespołem przy projektach","rewritten":"Współpracowałem w 4-osobowym zespole w trybie zdalnym używając Jira i Git — odpowiada wymaganiu 'praca w zespole rozproszonym' z sekcji Środowisko pracy"}
 
-ZADANIE 4 — roadmap (3-5 pozycji):
-Ułóż priorytetową listę umiejętności do nauki na podstawie gaps i profilu kandydata.
-Kolejność: maksymalizuj ROI — priorytetyzuj [Wymagane] przed [Mile widziane], umiejętności z wysokim impaktem na wynik (0/2 w wymaganych) przed niskim (0.5/2), łatwe do nauki przy istniejącym tle kandydata przed trudnymi.
-Jeśli kandydat ma bliski odpowiednik (np. pgvector gdy wymagany Pinecone) — zaznacz że nauka zajmie dni nie tygodnie.
-
-Każda pozycja:
-- skill: konkretna nazwa
-- dlaczego: 1-2 zdania — dlaczego TA umiejętność i TERAZ, jaki ma wpływ na zatrudnialność w tej roli i podobnych
-- start: jeden konkretny pierwszy krok (nie "naucz się Dockera" lecz "przejdź oficjalny Docker getting started i skonteneryzuj jeden istniejący projekt w 2h")
-
 Format odpowiedzi (TYLKO ten JSON, zero tekstu przed ani po):
 {
   "matchScore": {
-    "requiredScore": <suma punktów za wymagane — liczba z kropką jako separatorem dziesiętnym np. 8.5>,
-    "requiredTotal": <liczba wymaganych umiejętności, liczba całkowita>,
-    "optionalMatched": <liczba opcjonalnych które kandydat posiada, liczba całkowita>,
-    "optionalTotal": <liczba opcjonalnych umiejętności w ogłoszeniu, liczba całkowita>,
     "requiredBreakdown": [{"skill": "<nazwa>", "score": <0|0.5|1|1.5|2>}],
     "optionalBreakdown": [{"skill": "<nazwa>", "score": <0|1>}]
   },
@@ -106,13 +88,6 @@ Format odpowiedzi (TYLKO ten JSON, zero tekstu przed ani po):
     {
       "original": "<dosłowny cytat z CV lub null jeśli nowe>",
       "rewritten": "<przepisana wersja z uzasadnieniem dlaczego pasuje do ogłoszenia>"
-    }
-  ],
-  "roadmap": [
-    {
-      "skill": "<nazwa umiejętności>",
-      "dlaczego": "<dlaczego ta umiejętność i teraz — wpływ na zatrudnialność>",
-      "start": "<konkretny pierwszy krok>"
     }
   ]
 }`;
@@ -189,12 +164,18 @@ async function analyzeCV({ cvText, cvFile, mimetype, jobPosting, onEvent }) {
     const parsed = JSON.parse(raw);
     const result = analysisSchema.parse(parsed);
 
+    // Compute aggregates from breakdown — don't trust model arithmetic
+    const { requiredBreakdown, optionalBreakdown } = result.matchScore;
+    const requiredScore   = parseFloat(requiredBreakdown.reduce((s, i) => s + i.score, 0).toFixed(1));
+    const requiredTotal   = requiredBreakdown.length;
+    const optionalMatched = optionalBreakdown.filter(i => i.score > 0).length;
+    const optionalTotal   = optionalBreakdown.length;
+
     // Emit results as separate events so frontend can render progressively
-    onEvent('score',    result.matchScore);
-    onEvent('gaps',     result.gaps);
-    onEvent('bullets',  result.bullets);
-    onEvent('roadmap',  result.roadmap);
-    onEvent('done',     null);
+    onEvent('score',   { requiredScore, requiredTotal, optionalMatched, optionalTotal, requiredBreakdown, optionalBreakdown });
+    onEvent('gaps',    result.gaps);
+    onEvent('bullets', result.bullets);
+    onEvent('done',    null);
   } catch (err) {
     const message = err.name === 'ZodError'
       ? `Nieprawidłowa struktura odpowiedzi Claude: ${err.errors[0]?.message}`

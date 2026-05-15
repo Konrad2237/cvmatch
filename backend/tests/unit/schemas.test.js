@@ -29,26 +29,15 @@ const VALID_OPTIONAL_BREAKDOWN = [
   { skill: 'GraphQL', score: 1 },
 ];
 
-const VALID_ROADMAP = Array(3).fill({
-  skill:    'Docker',
-  dlaczego: 'Konteneryzacja pojawia się w większości ofert backend — 0/2 pkt na tej i podobnych ofertach.',
-  start:    'Przejdź oficjalny Docker getting started i skonteneryzuj jeden istniejący projekt w 2h.',
-});
-
 function validAnalysis({ matchScore: matchScoreOverride = {}, ...rest } = {}) {
   return {
     matchScore: {
-      requiredScore: 8,
-      requiredTotal: 6,
-      optionalMatched: 2,
-      optionalTotal: 4,
       requiredBreakdown: VALID_REQUIRED_BREAKDOWN,
       optionalBreakdown: VALID_OPTIONAL_BREAKDOWN,
       ...matchScoreOverride,
     },
     gaps:    Array(5).fill(VALID_GAP),
     bullets: Array(3).fill(VALID_BULLET),
-    roadmap: VALID_ROADMAP,
     ...rest,
   };
 }
@@ -112,11 +101,7 @@ describe('analysisSchema', () => {
     expect(() => analysisSchema.parse(validAnalysis({ bullets: Array(6).fill(VALID_BULLET) }))).toThrow();
   });
 
-  it('rejects negative requiredScore', () => {
-    expect(() => analysisSchema.parse(validAnalysis({ matchScore: { requiredScore: -1, requiredTotal: 6, optionalMatched: 0, optionalTotal: 0 } }))).toThrow();
-  });
-
-  it('accepts zero optionalTotal when job has no optional requirements', () => {
-    expect(() => analysisSchema.parse(validAnalysis({ matchScore: { requiredScore: 8, requiredTotal: 6, optionalMatched: 0, optionalTotal: 0 } }))).not.toThrow();
+  it('accepts empty optionalBreakdown when job has no optional requirements', () => {
+    expect(() => analysisSchema.parse(validAnalysis({ matchScore: { optionalBreakdown: [] } }))).not.toThrow();
   });
 });
