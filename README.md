@@ -2,8 +2,6 @@
 
 Narzędzie do analizy CV względem ogłoszenia o pracę — zwraca wynik dopasowania, listę braków i przepisane bullet pointy gotowe do wklejenia.
 
-**Demo:** [cvmatch-zeta.vercel.app](https://cvmatch-zeta.vercel.app)
-
 ---
 
 ## Spis treści
@@ -143,17 +141,17 @@ cvmatch/
 
 ## Czego się nauczyłem
 
-**Prompt framing zmienia zachowanie modelu bardziej niż dobór modelu.** "Sprawdź czy umiejętność jest w CV" kieruje model do szukania słów. "Oceń czy kandydat posiada tę kompetencję" kieruje go do wnioskowania z opisów projektów. Ta sama wiedza modelu, zupełnie inne wyniki — zmiana jednej linii.
+**Testowanie na prawdziwych danych jest niezastępowalne.**
+Żadna analiza teoretyczna nie zastąpi uruchomienia narzędzia na prawdziwych CV z prawdziwych ogłoszeń. Dopiero wtedy widać że coś co działa na przykładowych danych — regularnie się myli na rzeczywistych. To zmieniło moje podejście do weryfikacji: najpierw prawdziwy przypadek, potem testy jednostkowe — nie odwrotnie.
 
-**Modele AI są dobre w reasoning, słabe w arytmetyce.** Claude zwracał 7.5 zamiast 16 przy sumowaniu 10+ pozycji wewnątrz długiego JSON-a. Rozwiązanie: nie proś modelu o matematykę gdy masz dane — trzy linijki `.reduce()` w JS są zawsze poprawne.
+**Decyzja "nie budujemy tego" jest równie ważna jak "budujemy".**
+Learning roadmap, integracja z Supabase, rozszerzenie Chrome — każda z tych rzeczy była zaplanowana i każda została odrzucona. Najtrudniejsza część nie była techniczna — było nią przyznanie że coś co wydaje się wartościowe na papierze, nie dodaje wartości w praktyce. Wycięcie feature'u po jego zbudowaniu też jest postępem.
 
-**SSE parser po stronie klienta jest łatwy do pomylenia.** `response.body.getReader()` nie gwarantuje że każdy `read()` kończy się na granicy linii. Bez buforowania (`buffer = lines.pop()`) niekompletne linie trafiają do `JSON.parse` — aplikacja milczy bez żadnego błędu.
+**Praca z AI API to bardziej eksperymentowanie niż inżynieria.**
+Klasyczne API: daj input X, dostaniesz output Y. Model AI: output zależy od sformułowania, kolejności zdań, języka promptu. Przy każdej zmianie nie wiesz czy poprawa na jednym przypadku nie pogorszy wyników na innym. To zupełnie inna dyscyplina — wymaga iteracji na danych, nie tylko na kodzie.
 
-**Testowalność Express wymaga podziału app.js/index.js.** Supertest potrzebuje `app` bez uruchamiania serwera. Jeśli `listen()` jest w tym samym pliku co setup — każdy `require('./app')` w testach otwiera port i dostaje `EADDRINUSE`. Split to jeden ze standardów Node.js, ale nieoczywisty dopóki się na niego nie wpadnie.
-
-**Few-shot examples to najszybszy sposób poprawy jakości LLM outputu.** Instrukcja "bądź konkretny" jest dla modelu ambiwalentna. Przykład złego outputu obok dobrego eliminuje tę ambiwalencję natychmiast — bez zmiany modelu ani parametrów.
-
-**Polskojęzyczny prompt powoduje polskie separatory dziesiętne.** Claude pisał `8,5` zamiast `8.5` w JSON — co rzuca błąd w `JSON.parse`. Explicite "używaj kropki jako separatora dziesiętnego" w dwóch miejscach promptu rozwiązuje problem. Bez tej zasady każde ułamkowe score łamało aplikację.
+**Działające end-to-end od pierwszego dnia przyspiesza wszystko.**
+Surowy JSON w konsoli w Tygodniu 1 był lepszym punktem startowym niż dopracowana architektura bez weryfikacji. Każdy kolejny tydzień to ulepszanie czegoś co już działa — a nie kończenie czegoś co istnieje tylko w planach.
 
 ---
 
@@ -161,5 +159,4 @@ cvmatch/
 
 **Konrad Pochwała**
 
-- GitHub: [github.com/Konrad2237](https://github.com/Konrad2237)
-- LinkedIn: [DO UZUPEŁNIENIA]
+[wizytowka-ivory.vercel.app](https://wizytowka-ivory.vercel.app)
