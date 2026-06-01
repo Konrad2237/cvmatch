@@ -18,9 +18,7 @@ Narzędzie do analizy CV względem ogłoszenia o pracę — zwraca wynik dopasow
 
 ## Co robi
 
-Wklejasz CV i ogłoszenie o pracę — w 30 sekund dostajesz konkretny feedback: ile wymaganych umiejętności masz i ile brakuje, listę braków z wyjaśnieniem dlaczego są ważne i jak bardzo są transferowalne, oraz gotowe fragmenty CV przepisane językiem konkretnego ogłoszenia do wklejenia bez edycji.
-
-Zamiast zastanawiać się "dlaczego mnie nie zaproszono na rozmowę" — wiesz dokładnie co poprawić przed następną aplikacją.
+Wklejasz ogłoszenie o pracę — narzędzie bierze CV z twojego profilu i w 20–30 sekund zwraca trzy rzeczy: ile wymaganych umiejętności masz i z jakim wynikiem, listę konkretnych braków z wyjaśnieniem jak bardzo są transferowalne, oraz przepisane fragmenty CV zoptymalizowane pod słowa kluczowe z tego ogłoszenia.
 
 ---
 
@@ -33,7 +31,7 @@ Zamiast zastanawiać się "dlaczego mnie nie zaproszono na rozmowę" — wiesz d
 - **Przepisane bullet pointy** — 3–5 fragmentów CV z słowami kluczowymi z ogłoszenia; przycisk "Kopiuj" przy każdym
 - **Profil użytkownika** — zapisz CV raz w zakładce Profil; możliwość dopisania dodatkowych umiejętności nieujętych w formalnym CV jako osobne chipy
 - **Historia analiz** — ręczny zapis wybranych wyników (max 20), podgląd i wczytanie bez ponownej analizy; dane w localStorage, bez backendu
-- **Streaming wyników** — score → braki → bullet pointy pojawiają się sekcja po sekcji zamiast po 30 sekundach ciszy
+- **Streaming wyników** — wyniki pojawiają się sekcja po sekcji; wynik punktowy widoczny zanim analiza braków i bullet pointów się skończy
 
 ---
 
@@ -42,7 +40,7 @@ Zamiast zastanawiać się "dlaczego mnie nie zaproszono na rozmowę" — wiesz d
 | Narzędzie | Wersja | Do czego |
 |---|---|---|
 | Express.js | 4.19.2 | Backend HTTP + SSE streaming |
-| Node.js | 18+ | Runtime backendu |
+| Node.js | 18+ | Środowisko uruchomieniowe JavaScript |
 | @anthropic-ai/sdk | 0.30.0 | Klient Claude API |
 | Claude Haiku | claude-haiku-4-5-20251001 | Model AI — analiza, gap analysis, bullet pointy |
 | Multer | 2.1.1 | Upload PDF w pamięci RAM (memoryStorage) |
@@ -51,7 +49,7 @@ Zamiast zastanawiać się "dlaczego mnie nie zaproszono na rozmowę" — wiesz d
 | React | 18.3.1 | UI |
 | Tailwind CSS | 3.4.10 | Stylowanie |
 | Jest + Supertest | 29.7 + 7.2 | Testy jednostkowe i integracyjne (31 testów) |
-| Render | — | Hosting backendu (free tier) |
+| Render | — | Hosting backendu (darmowy plan) |
 | Vercel | — | Hosting frontendu |
 
 ---
@@ -92,7 +90,7 @@ SSE events → Przeglądarka
 
 **Agregaty w JS, nie w modelu** — Claude zwraca tylko `requiredBreakdown[]` i `optionalBreakdown[]`; serwer liczy sumy przez `.reduce()` i `.filter()`. Model zwracał błędne agregaty (7.5 zamiast 16) przy 10+ pozycjach w środku długiego JSON-a.
 
-**SSE zamiast pollingu** — Claude potrzebuje 15–25s na pełną analizę; Vercel Functions mają limit 10s na free planie. Osobny serwer Express na Render + SSE = jedno długożyjące połączenie bez timeoutów i zbędnych requestów.
+**SSE zamiast pollingu** — Claude potrzebuje 15–25s na pełną analizę; Vercel Functions mają limit 10s na darmowym planie. Osobny serwer Express na Render + SSE = jedno długożyjące połączenie bez timeoutów i zbędnych requestów.
 
 **Walidacja wejścia przed SSE** — błędy HTTP 400 muszą wyjść przed `res.flushHeaders()`. Po otwarciu strumienia status HTTP jest już wysłany i nie można go zmienić — błąd walidacji po fakcie byłby niewidoczny dla klienta.
 
