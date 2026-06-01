@@ -13,9 +13,8 @@ Narzędzie do analizy CV względem ogłoszenia o pracę — zwraca wynik dopasow
 3. [Technologie](#technologie)
 4. [Jak to działa](#jak-to-działa)
 5. [Struktura projektu](#struktura-projektu)
-6. [Uruchomienie lokalne](#uruchomienie-lokalne)
-7. [Czego się nauczyłem](#czego-się-nauczyłem)
-8. [Autor](#autor)
+6. [Czego się nauczyłem](#czego-się-nauczyłem)
+7. [Autor](#autor)
 
 ---
 
@@ -138,46 +137,6 @@ cvmatch/
             ├── ProfileTab.jsx      ← CV textarea + chip input na dodatkowe umiejętności → localStorage
             ├── HistoryTab.jsx      ← lista zapisanych analiz → localStorage
             └── StreamingStatus.jsx ← spinner podczas analizy
-```
-
----
-
-## Uruchomienie lokalne
-
-### Wymagania
-
-- Node.js 18+
-- Klucz API Anthropic — [console.anthropic.com](https://console.anthropic.com)
-
-### Backend
-
-```bash
-cd backend
-cp ../.env.example .env
-# uzupełnij ANTHROPIC_API_KEY w .env
-npm install
-npm run dev        # nodemon, port 3001
-```
-
-### Frontend
-
-```bash
-cd frontend
-# stwórz plik .env.local z zawartością:
-# NEXT_PUBLIC_API_URL=http://localhost:3001
-npm install
-npm run dev        # Next.js, port 3000
-```
-
-Otwórz `http://localhost:3000`.
-
-> **Uwaga:** Na produkcji backend działa na Render free tier, który usypia serwis po 15 minutach bezczynności. Pierwsze zapytanie po uśpieniu może zająć ~30 sekund.
-
-### Testy
-
-```bash
-cd backend
-npm test           # 31 testów: unit (extractJSON, schemas) + integration (SSE z mocked Claude)
 ```
 
 ---
