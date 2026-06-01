@@ -1,175 +1,105 @@
 # CVMatch
 
-![Node.js](https://img.shields.io/badge/Node.js-22.x-339933?logo=node.js&logoColor=white)
-![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=next.js&logoColor=white)
-![Claude API](https://img.shields.io/badge/Claude_API-Haiku-D97706?logo=anthropic&logoColor=white)
-![License](https://img.shields.io/badge/licencja-MIT-blue)
+Narzędzie do analizy CV względem ogłoszenia o pracę — zwraca wynik dopasowania, listę braków i przepisane bullet pointy gotowe do wklejenia.
 
-Wklejasz CV i ogłoszenie o pracę — dostajesz konkretny feedback w 30 sekund: ile z wymaganych umiejętności już masz, czego dokładnie brakuje i gotowe fragmenty CV przepisane pod to ogłoszenie.
-
-Kandydaci często wysyłają to samo CV do dziesiątek ofert i nie wiedzą, dlaczego nie dostają odpowiedzi. CVMatch wskazuje konkretne luki — nie "rozważ dodanie słów kluczowych", ale "Docker wymagany w punkcie 3 ogłoszenia, brak w CV i żadnym projekcie". Każde wykryte braki mają ocenę transferowalności: jeśli znasz LangGraph zamiast LangChain, narzędzie powie ci czy ta różnica ma znaczenie dla tej konkretnej roli. Bullet pointy gotowe do wklejenia są przepisane z twoich oryginalnych opisów — żadnego generycznego AI-speak.
-
-## Demo
-
-> 📹 **[Obejrzyj demo na YouTube](#)** ← link do nagrania
-
-![Demo GIF](docs/demo.gif)
+**Demo:** [cvmatch-zeta.vercel.app](https://cvmatch-zeta.vercel.app)
 
 ---
 
 ## Spis treści
 
-- [Funkcjonalności](#funkcjonalności)
-- [Stos technologiczny](#stos-technologiczny)
-- [Architektura](#architektura)
-- [Wymagania](#wymagania)
-- [Instalacja i uruchomienie lokalne](#instalacja-i-uruchomienie-lokalne)
-- [Zmienne środowiskowe](#zmienne-środowiskowe)
-- [Użycie](#użycie)
-- [Struktura projektu](#struktura-projektu)
-- [Testowanie](#testowanie)
-- [Deployment](#deployment)
-- [Czego się nauczyłem](#czego-się-nauczyłem)
-- [Licencja](#licencja)
+1. [Co robi](#co-robi)
+2. [Funkcjonalności](#funkcjonalności)
+3. [Technologie](#technologie)
+4. [Jak to działa](#jak-to-działa)
+5. [Struktura projektu](#struktura-projektu)
+6. [Uruchomienie lokalne](#uruchomienie-lokalne)
+7. [Czego się nauczyłem](#czego-się-nauczyłem)
+8. [Autor](#autor)
+
+---
+
+## Co robi
+
+Wklejasz CV i ogłoszenie o pracę — w 30 sekund dostajesz konkretny feedback: ile wymaganych umiejętności masz i ile brakuje, listę braków z wyjaśnieniem dlaczego są ważne i jak bardzo są transferowalne, oraz gotowe fragmenty CV przepisane językiem konkretnego ogłoszenia do wklejenia bez edycji.
+
+Zamiast zastanawiać się "dlaczego mnie nie zaproszono na rozmowę" — wiesz dokładnie co poprawić przed następną aplikacją.
 
 ---
 
 ## Funkcjonalności
 
-- **Weighted score per umiejętność** — każda wymagana umiejętność punktowana 0–2 (posiadasz / częściowy odpowiednik / brak), opcjonalne 0–1; aggregaty liczone w JS po parsowaniu, nie przez model
-- **Per-skill breakdown** — kolorowe chipy pokazują za co konkretnie dostałeś punkty (zielony = 2/2, szary = 0/2)
-- **Gap analysis z transferowalnością** — każdy brak oznaczony jako [Wymagane] / [Mile widziane] / [Wymagane implicite] z oceną czy pokrewna technologia wystarczy
-- **Przepisane bullet pointy** — 3–5 fragmentów CV zoptymalizowanych pod słowa kluczowe ogłoszenia, zachowując twój styl i fakty
-- **Streaming wyników przez SSE** — wyniki pojawiają się na bieżąco zamiast po 20 sekundach ciszy; keepalive co 5s zapobiega zerwaniu połączenia
-- **Profil użytkownika** — CV i dodatkowe umiejętności zapisane lokalnie; nie musisz wklejać CV przy każdej analizie
-- **Historia analiz** — ręczny zapis wyników (max 20), możliwość powrotu do poprzednich bez re-analizy
-- **Obsługa PDF** — wgrywasz plik PDF zamiast kopiować tekst; Claude API natywnie czyta dokument bez osobnej biblioteki
+- **Analiza CV vs ogłoszenie** — wklej tekst CV z zapisanego profilu lub wgraj PDF; wyniki w 20–30 sekund
+- **Weighted score per umiejętność** — każda wymagana umiejętność oceniana w skali 0–2 pkt (bezpośrednie posiadanie, bliski odpowiednik, pokrewna technologia); opcjonalne 0–1 pkt
+- **Per-skill breakdown** — kolorowe chipy przy każdej umiejętności: zielony (2/2) → limonkowy → żółty → pomarańczowy → szary (0/2)
+- **Gap analysis** — minimum 5 braków z kategorią (Technologia / Soft skill / Certyfikat), etykietą ważności ([Wymagane] / [Mile widziane] / [Wymagane implicite]) i oceną transferowalności
+- **Przepisane bullet pointy** — 3–5 fragmentów CV z słowami kluczowymi z ogłoszenia; przycisk "Kopiuj" przy każdym
+- **Profil użytkownika** — zapisz CV raz w zakładce Profil; możliwość dopisania dodatkowych umiejętności nieujętych w formalnym CV jako osobne chipy
+- **Historia analiz** — ręczny zapis wybranych wyników (max 20), podgląd i wczytanie bez ponownej analizy; dane w localStorage, bez backendu
+- **Streaming wyników** — score → braki → bullet pointy pojawiają się sekcja po sekcji zamiast po 30 sekundach ciszy
 
 ---
 
-## Stos technologiczny
+## Technologie
 
-| Technologia | Zastosowanie |
-|---|---|
-| **Claude API (Anthropic) — Haiku** | Semantyczna analiza dopasowania CV do ogłoszenia, generowanie gap analysis i bullet pointów; natywna obsługa PDF eliminuje potrzebę parsera |
-| **Express.js** | Backend jako długo działający serwer; obsługa SSE i keepalive (Vercel Functions mają limit 10s, Claude odpowiada 15–25s) |
-| **Next.js 14** | Frontend; routing app directory, Server Components, deploy jedną komendą na Vercel |
-| **Zod** | Walidacja schematu JSON zwracanego przez Claude; zamiast `try/catch` na `JSON.parse` — schema rzuca obsługiwany błąd gdy model zmieni strukturę |
-| **Tailwind CSS** | Stylowanie UI |
-| **Render** | Hosting backendu — brak limitu timeout, persistentny proces |
-| **Vercel** | Hosting frontendu |
-| **localStorage** | Persystencja profilu i historii analiz po stronie klienta — bez backendu |
-
----
-
-## Architektura
-
-```
-┌─────────────────┐         POST /analyze (multipart)          ┌──────────────────────┐
-│  Next.js        │  ─────────────────────────────────────────► │  Express.js          │
-│  Vercel         │                                             │  Render              │
-│                 │  ◄─────────────── SSE stream ─────────────  │                      │
-│  SSE fetch loop │    data: {type:"score",  payload:{...}}     │  Zod validation      │
-│  per-event      │    data: {type:"gaps",   payload:[...]}     │  analyzeCV()         │
-│  rendering      │    data: {type:"bullets",payload:[...]}     │  keepalive co 5s     │
-│                 │    data: {type:"done"}                      │                      │
-└─────────────────┘                                             └──────────┬───────────┘
-                                                                           │
-                                                                           ▼
-                                                                  ┌────────────────┐
-                                                                  │  Claude API    │
-                                                                  │  (Haiku)       │
-                                                                  │  streaming     │
-                                                                  └────────────────┘
-```
-
-**Kluczowe decyzje architektoniczne:**
-
-- **Backend na Render zamiast Vercel Functions** — Functions mają limit 10 sekund; Claude odpowiada 15–25s. Render jako długo działający serwer rozwiązuje problem bez hacków z Edge Runtime.
-- **SSE zamiast pollingu** — keepalive (`: keepalive` co 5s) trzyma połączenie; użytkownik widzi wyniki pojawiające się na bieżąco.
-- **Agregaty w JS, nie w modelu** — Claude zwraca tylko tablice breakdown per umiejętność; `requiredScore`, `requiredTotal` itd. liczone przez `.reduce()` i `.filter()` po parsowaniu. Model błędnie sumował przy 10+ pozycjach.
-- **Zod schema** — Claude czasem opakowuje JSON w markdown lub zmienia strukturę; Zod wymusza dokładny format i rzuca obsługiwany błąd zamiast crashować w losowym miejscu.
-
----
-
-## Wymagania
-
-- **Node.js** v18 lub nowszy
-- **npm** v9 lub nowszy
-- **Klucz API Anthropic** — konto na [console.anthropic.com](https://console.anthropic.com)
-
----
-
-## Instalacja i uruchomienie lokalne
-
-### 1. Sklonuj repozytorium
-
-```bash
-git clone https://github.com/Konrad2237/cvmatch.git
-cd cvmatch
-```
-
-### 2. Backend
-
-```bash
-cd backend
-npm install
-cp ../.env.example .env
-# Uzupełnij ANTHROPIC_API_KEY w pliku .env
-npm run dev
-```
-
-Backend startuje na `http://localhost:3001`.
-
-### 3. Frontend
-
-```bash
-cd ../frontend
-npm install
-# Stwórz plik .env.local z jedną zmienną:
-echo "NEXT_PUBLIC_API_URL=http://localhost:3001" > .env.local
-npm run dev
-```
-
-Frontend startuje na `http://localhost:3000`.
-
----
-
-## Zmienne środowiskowe
-
-### Backend (`.env`)
-
-| Zmienna | Wymagana | Opis |
+| Narzędzie | Wersja | Do czego |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | tak | Klucz API z console.anthropic.com |
-| `FRONTEND_URL` | tak | URL frontendu (CORS); lokalnie `http://localhost:3000` |
-| `CLAUDE_MODEL` | nie | Domyślnie `claude-haiku-4-5-20251001` |
-
-### Frontend (`.env.local`)
-
-| Zmienna | Wymagana | Opis |
-|---|---|---|
-| `NEXT_PUBLIC_API_URL` | tak | URL backendu; lokalnie `http://localhost:3001` |
+| Express.js | 4.19.2 | Backend HTTP + SSE streaming |
+| Node.js | 18+ | Runtime backendu |
+| @anthropic-ai/sdk | 0.30.0 | Klient Claude API |
+| Claude Haiku | claude-haiku-4-5-20251001 | Model AI — analiza, gap analysis, bullet pointy |
+| Multer | 2.1.1 | Upload PDF w pamięci RAM (memoryStorage) |
+| Zod | 3.23.8 | Walidacja struktury JSON z Claude |
+| Next.js | 14.2.5 | Frontend (App Router) |
+| React | 18.3.1 | UI |
+| Tailwind CSS | 3.4.10 | Stylowanie |
+| Jest + Supertest | 29.7 + 7.2 | Testy jednostkowe i integracyjne (31 testów) |
+| Render | — | Hosting backendu (free tier) |
+| Vercel | — | Hosting frontendu |
 
 ---
 
-## Użycie
+## Jak to działa
 
-### Podstawowe
+### Flow od inputu do outputu
 
-1. Otwórz aplikację w przeglądarce
-2. Przejdź do zakładki **Profil** — wklej swoje CV i zapisz
-3. Wróć do zakładki **Analiza** — wklej ogłoszenie o pracę (tylko wymagania, bez opisu firmy)
-4. Kliknij **Analizuj** — wyniki streamują na bieżąco
-5. Po zakończeniu kliknij **Zapisz analizę** jeśli chcesz wrócić do wyników później
+```
+Przeglądarka
+  → FormData (cvText z localStorage lub plik PDF + treść ogłoszenia)
+  → POST /analyze
 
-### Upload PDF
+Backend (Express)
+  → Walidacja wejścia — błędy 400 JSON wychodzą PRZED otwarciem SSE
+  → SSE headers + flushHeaders()
+  → Keepalive ": keepalive\n\n" co 5s — proxy i load balancery nie zrywają połączenia
+  → analyzeCV()
 
-Zamiast profilu tekstowego możesz wgrać CV jako plik PDF — przełącznik "Wgraj PDF" w formularzu analizy. Tryb PDF nie korzysta z profilu zapisanego w localStorage.
+Claude API
+  → PDF jako base64 document lub tekst CV w content[]
+  → Streaming przez client.messages.stream()
+  → extractJSON() — usuwa markdown fences gdy Claude je doda
+  → Zod waliduje strukturę odpowiedzi
+  → Agregaty liczone w JS przez .reduce() i .filter()
+    (model błędnie sumuje przy 10+ pozycjach wewnątrz długiego JSON-a)
 
-### Historia
+SSE events → Przeglądarka
+  → 'score'   — wynik + per-skill breakdown (pojawia się pierwszy)
+  → 'gaps'    — lista braków
+  → 'bullets' — przepisane bullet pointy
+  → 'done'    — koniec strumienia
+```
 
-Zakładka **Historia** przechowuje do 20 zapisanych analiz. Możesz wczytać poprzednie wyniki bez ponownego wywołania API.
+### Kluczowe decyzje techniczne
+
+**Semantic reasoning, nie keyword matching** — prompt pyta "oceń czy kandydat posiada tę kompetencję", nie "sprawdź czy słowo jest w CV". Zmiana jednej linii wyeliminowała przypadki gdy "Claude API" lądowało w brakach mimo że CV zawierało "Anthropic API / Claude Haiku".
+
+**Agregaty w JS, nie w modelu** — Claude zwraca tylko `requiredBreakdown[]` i `optionalBreakdown[]`; serwer liczy sumy przez `.reduce()` i `.filter()`. Model zwracał błędne agregaty (7.5 zamiast 16) przy 10+ pozycjach w środku długiego JSON-a.
+
+**SSE zamiast pollingu** — Claude potrzebuje 15–25s na pełną analizę; Vercel Functions mają limit 10s na free planie. Osobny serwer Express na Render + SSE = jedno długożyjące połączenie bez timeoutów i zbędnych requestów.
+
+**Walidacja wejścia przed SSE** — błędy HTTP 400 muszą wyjść przed `res.flushHeaders()`. Po otwarciu strumienia status HTTP jest już wysłany i nie można go zmienić — błąd walidacji po fakcie byłby niewidoczny dla klienta.
+
+**localStorage zamiast bazy danych** — narzędzie dla jednego użytkownika; overhead własnej bazy (konto, schema, klucze, migracje) nieproporcjonalny do korzyści. Historia i profil działają offline, bez żadnego dodatkowego serwisu.
 
 ---
 
@@ -177,119 +107,100 @@ Zakładka **Historia** przechowuje do 20 zapisanych analiz. Możesz wczytać pop
 
 ```
 cvmatch/
-├── .env.example                    ← zmienne środowiskowe (bez wartości)
-├── .gitignore
-├── docs/
-│   └── adr/
-│       ├── ADR-1.md                ← architektura MVP, SSE, Zod
-│       ├── ADR-2.md                ← few-shot examples, Haiku, Render
-│       ├── ADR-3.md                ← testy, iteracja promptu, weighted scoring
-│       └── ADR-4.md                ← per-skill breakdown, profil, historia, agregaty w JS
+├── render.yaml                     ← konfiguracja deploy backendu na Render
+├── .env.example                    ← wzorzec zmiennych środowiskowych
+│
 ├── backend/
-│   ├── package.json
-│   ├── railway.toml
-│   └── src/
-│       ├── app.js                  ← Express setup, eksportuje app bez listen()
-│       ├── index.js                ← wyłącznie app.listen(PORT)
-│       ├── routes/
-│       │   └── analyze.js          ← POST /analyze: walidacja → SSE → keepalive → analyzeCV()
-│       └── lib/
-│           ├── claude.js           ← SYSTEM_PROMPT + analyzeCV() + extractJSON()
-│           └── schemas.js          ← Zod: matchScore (breakdown arrays), gaps, bullets
+│   ├── src/
+│   │   ├── app.js                  ← Express setup, CORS, routing — bez listen() (wymagane przez supertest)
+│   │   ├── index.js                ← tylko app.listen(PORT)
+│   │   ├── routes/
+│   │   │   └── analyze.js          ← POST /analyze — walidacja, SSE, keepalive, analyzeCV()
+│   │   └── lib/
+│   │       ├── claude.js           ← SYSTEM_PROMPT, streaming, extractJSON(), agregaty w JS
+│   │       └── schemas.js          ← Zod: requiredBreakdown[], optionalBreakdown[], gaps[], bullets[]
 │   └── tests/
 │       ├── unit/
-│       │   ├── extractJSON.test.js ← 7 przypadków: fenced JSON, bare JSON, edge cases
-│       │   └── schemas.test.js     ← walidacja schematu Zod z fixture'ami breakdown
+│       │   ├── extractJSON.test.js ← 7 testów parsowania JSON z markdown fences
+│       │   └── schemas.test.js     ← 14 testów Zod schema z fixtures
 │       └── integration/
-│           └── analyze.test.js     ← SSE flow z mockiem analyzeCV
+│           └── analyze.test.js     ← 10 testów SSE z mocked analyzeCV (supertest)
+│
 └── frontend/
-    ├── package.json
-    ├── next.config.js
-    ├── tailwind.config.js
     └── src/app/
-        ├── layout.jsx
-        ├── page.jsx                ← 3 zakładki, SSE fetch loop, zapis historii
-        ├── globals.css
+        ├── page.jsx                ← 3 zakładki (Analiza/Profil/Historia), SSE fetch loop, zapis historii
+        ├── layout.jsx              ← root layout, metadata
         └── components/
-            ├── AnalyzeForm.jsx     ← ogłoszenie + tryb PDF/profil; CV z localStorage
-            ├── MatchScore.jsx      ← combined score, per-skill breakdown chips
-            ├── GapAnalysis.jsx     ← lista braków z badge kategorii
-            ├── BulletPoints.jsx    ← bullet pointy + kopiowanie do schowka
-            ├── ProfileTab.jsx      ← CV textarea + chip input + zapis do localStorage
-            ├── HistoryTab.jsx      ← lista zapisanych analiz, Wczytaj/Usuń
-            └── StreamingStatus.jsx ← animacja podczas ładowania
+            ├── AnalyzeForm.jsx     ← toggle profil/PDF, buduje FormData, czyta localStorage przy submicie
+            ├── MatchScore.jsx      ← combined score, pasek procentowy, per-skill breakdown chipy
+            ├── GapAnalysis.jsx     ← lista braków z kolorowymi badge kategorii
+            ├── BulletPoints.jsx    ← bullet pointy + przycisk Kopiuj z feedbackiem
+            ├── ProfileTab.jsx      ← CV textarea + chip input na dodatkowe umiejętności → localStorage
+            ├── HistoryTab.jsx      ← lista zapisanych analiz → localStorage
+            └── StreamingStatus.jsx ← spinner podczas analizy
 ```
 
 ---
 
-## Testowanie
+## Uruchomienie lokalne
 
-Testy są tylko po stronie backendu (31 przypadków).
+### Wymagania
+
+- Node.js 18+
+- Klucz API Anthropic — [console.anthropic.com](https://console.anthropic.com)
+
+### Backend
 
 ```bash
 cd backend
-npm test
+cp ../.env.example .env
+# uzupełnij ANTHROPIC_API_KEY w .env
+npm install
+npm run dev        # nodemon, port 3001
 ```
 
-### Uruchamianie wybranych testów
+### Frontend
 
 ```bash
-# Tylko unit testy
-npm test -- --testPathPattern=unit
-
-# Tylko testy extractJSON
-npm test -- --testPathPattern=extractJSON
-
-# Tylko testy integracyjne
-npm test -- --testPathPattern=integration
+cd frontend
+# stwórz plik .env.local z zawartością:
+# NEXT_PUBLIC_API_URL=http://localhost:3001
+npm install
+npm run dev        # Next.js, port 3000
 ```
 
-### Co jest testowane
+Otwórz `http://localhost:3000`.
 
-| Plik | Rodzaj | Co sprawdza |
-|---|---|---|
-| `extractJSON.test.js` | unit | Wycinanie JSON z markdown fences, bare JSON, edge cases |
-| `schemas.test.js` | unit | Walidacja schematu Zod: breakdowny, gaps, bullets |
-| `analyze.test.js` | integration | Kontrakt SSE: kolejność eventów, struktura payloadu — z mockiem `analyzeCV` |
+> **Uwaga:** Na produkcji backend działa na Render free tier, który usypia serwis po 15 minutach bezczynności. Pierwsze zapytanie po uśpieniu może zająć ~30 sekund.
 
-Testy integracyjne mockują `analyzeCV` — testują kontrakt SSE, nie model AI. Prawdziwe wywołania API byłyby niedeterministyczne i kosztowne.
+### Testy
 
----
-
-## Deployment
-
-Projekt działa na dwóch osobnych serwisach.
-
-### Backend — Render
-
-1. Utwórz nowy **Web Service** na [render.com](https://render.com)
-2. Wskaż katalog `backend/` jako root
-3. Build command: `npm install`
-4. Start command: `npm start`
-5. Dodaj zmienne środowiskowe: `ANTHROPIC_API_KEY`, `FRONTEND_URL`
-
-### Frontend — Vercel
-
-1. Importuj repozytorium na [vercel.com](https://vercel.com)
-2. Ustaw **Root Directory** na `frontend`
-3. Dodaj zmienną środowiskową: `NEXT_PUBLIC_API_URL` → URL backendu z Render
-
-Po deploymencie zaktualizuj `FRONTEND_URL` w Render na URL frontendu z Vercel (wymagane dla CORS).
+```bash
+cd backend
+npm test           # 31 testów: unit (extractJSON, schemas) + integration (SSE z mocked Claude)
+```
 
 ---
 
 ## Czego się nauczyłem
 
-**Przenoś obliczenia do kodu zawsze gdy to możliwe.** Claude jest dobry w reasoning semantycznym ("czy kandydat posiada tę umiejętność?"), ale fatalny w arytmetyce przy 10+ pozycjach — zwrócił 7.5 zamiast 16 przy poprawnym breakdown. Rozwiązanie: model zwraca tylko dane per-element, JS liczy sumy przez `.reduce()`.
+**Prompt framing zmienia zachowanie modelu bardziej niż dobór modelu.** "Sprawdź czy umiejętność jest w CV" kieruje model do szukania słów. "Oceń czy kandydat posiada tę kompetencję" kieruje go do wnioskowania z opisów projektów. Ta sama wiedza modelu, zupełnie inne wyniki — zmiana jednej linii.
 
-**Prompt engineering to iteracja, nie jednorazowe napisanie.** Zanim system prompt osiągnął obecną formę, przeszedł ~15 iteracji. Główny problem: zbyt ogólne sugestie ("rozważ dodanie umiejętności technicznych"). Rozwiązanie: few-shot examples pokazujące kontrast DOBRY/NIEDOZWOLONY, zasada "jeden bullet ogłoszenia = jedna pozycja w breakdown", tablice funkcjonalnych odpowiedników.
+**Modele AI są dobre w reasoning, słabe w arytmetyce.** Claude zwracał 7.5 zamiast 16 przy sumowaniu 10+ pozycji wewnątrz długiego JSON-a. Rozwiązanie: nie proś modelu o matematykę gdy masz dane — trzy linijki `.reduce()` w JS są zawsze poprawne.
 
-**Architektura SSE jest prostsza niż polling i daje lepszy UX.** Keepalive co 5 sekund (`}: keepalive`) trzyma połączenie podczas długich odpowiedzi Claude. Polling generowałby zbędne requesty i opóźnienie między chunkami.
+**SSE parser po stronie klienta jest łatwy do pomylenia.** `response.body.getReader()` nie gwarantuje że każdy `read()` kończy się na granicy linii. Bez buforowania (`buffer = lines.pop()`) niekompletne linie trafiają do `JSON.parse` — aplikacja milczy bez żadnego błędu.
 
-**Walidacja wejść przed otwarciem SSE.** Po wywołaniu `res.flushHeaders()` nie można zmienić HTTP status — błędy 400 muszą wychodzić przed tym momentem. Odkryłem to debugując błędy walidacji które przechodziły do klienta jako status 200 z eventem `error`.
+**Testowalność Express wymaga podziału app.js/index.js.** Supertest potrzebuje `app` bez uruchamiania serwera. Jeśli `listen()` jest w tym samym pliku co setup — każdy `require('./app')` w testach otwiera port i dostaje `EADDRINUSE`. Split to jeden ze standardów Node.js, ale nieoczywisty dopóki się na niego nie wpadnie.
+
+**Few-shot examples to najszybszy sposób poprawy jakości LLM outputu.** Instrukcja "bądź konkretny" jest dla modelu ambiwalentna. Przykład złego outputu obok dobrego eliminuje tę ambiwalencję natychmiast — bez zmiany modelu ani parametrów.
+
+**Polskojęzyczny prompt powoduje polskie separatory dziesiętne.** Claude pisał `8,5` zamiast `8.5` w JSON — co rzuca błąd w `JSON.parse`. Explicite "używaj kropki jako separatora dziesiętnego" w dwóch miejscach promptu rozwiązuje problem. Bez tej zasady każde ułamkowe score łamało aplikację.
 
 ---
 
-## Licencja
+## Autor
 
-[MIT](LICENSE)
+**Konrad Pochwała**
+
+- GitHub: [github.com/Konrad2237](https://github.com/Konrad2237)
+- LinkedIn: [DO UZUPEŁNIENIA]
