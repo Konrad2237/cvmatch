@@ -2,6 +2,8 @@
 
 Narzędzie do analizy CV względem ogłoszenia o pracę — zwraca wynik dopasowania, listę braków i przepisane bullet pointy gotowe do wklejenia.
 
+![CVMatch screenshot](https://github.com/user-attachments/assets/9dd52652-4118-45a7-9b39-8d6109f3c920)
+
 ---
 
 ## Spis treści
