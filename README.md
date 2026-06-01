@@ -48,7 +48,7 @@ Wklejasz ogłoszenie o pracę — narzędzie bierze CV z twojego profilu i w 20�
 | Next.js | 14.2.5 | Frontend (App Router) |
 | React | 18.3.1 | UI |
 | Tailwind CSS | 3.4.10 | Stylowanie |
-| Jest + Supertest | 29.7 + 7.2 | Testy jednostkowe i integracyjne (31 testów) |
+| Jest + Supertest | 29.7 + 7.2 | Testy jednostkowe i integracyjne (30 testów) |
 | Render | — | Hosting backendu (darmowy plan) |
 | Vercel | — | Hosting frontendu |
 

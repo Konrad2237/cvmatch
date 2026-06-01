@@ -31,3 +31,6 @@ testycv/
 
 # Claude Code
 .claude/
+
+# Dokumentacja wewnętrzna
+docs/adr/
